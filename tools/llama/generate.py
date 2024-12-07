@@ -719,10 +719,9 @@ def generate_long(
     text: str,
     num_samples: int = 1,
     max_new_tokens: int = 0,
-    top_p: int = 0.7,
+    top_p: float = 0.7,
     repetition_penalty: float = 1.5,
     temperature: float = 0.7,
-    compile: bool = False,
     iterative_prompt: bool = True,
     max_length: int = 2048,
     chunk_length: int = 150,
@@ -847,9 +846,6 @@ def generate_long(
                 top_p=top_p,
                 repetition_penalty=repetition_penalty,
             )
-
-            if sample_idx == 0 and seg_idx == 0 and compile:
-                logger.info(f"Compilation time: {time.perf_counter() - t0:.2f} seconds")
 
             if torch.cuda.is_available():
                 torch.cuda.synchronize()

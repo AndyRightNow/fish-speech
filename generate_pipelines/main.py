@@ -1,43 +1,27 @@
-from tools.llama.generate import main as generate_semantic_tokens
+from tools.llama.generate_class import llama_semantic_tokens_generate
 from pathlib import Path
 from loguru import logger
 from os import path
 import json
-from hashlib import sha256, sha1
+from hashlib import sha256
+from .constants import base_dir
+from .pipeline_states import PipelineStates
 import sys
 
-base_dir = "generate_pipelines"
 pipeline_states_json_path = "states.json"
 base_output_dir = path.join(base_dir, "output")
 max_sem_input_count = 1000
-
-def wrapped_generate_semantic_tokens(text, file_hash):
-    generate_semantic_tokens(
-        text = text,
-        prompt_text = ["人间灯火倒映湖中，她的渴望让静水泛起涟漪。若代价只是孤独，那就让这份愿望肆意流淌。流入她所注视的世间，也流入她如湖水般澄澈的目光。"],
-        prompt_tokens = [Path("4_output_trained.npy")],
-        output_name=f"generate_pipelines/output/semantic_tokens/{file_hash}",
-        num_samples = 1,
-        compile = True
-    )
+sem_tokens_output_dir = path.join(base_output_dir, "semantic_tokens")
 
 
 if __name__ == "__main__":
-    pipeline_states = {}
-
-    def save_pipeline_states():
-        with open(path.join(base_dir, pipeline_states_json_path), 'w', encoding='utf-8') as pipeline_states_json_file:
-            logger.info("Updating pipeline states")
-            pipeline_states_json_file.write(json.dumps(pipeline_states))
-
+    pipeline_states = None
     try:
-
-        logger.info("Reading pipeline states")
-        with open(path.join(base_dir, pipeline_states_json_path), 'r', encoding='utf-8') as pipeline_states_json_file:
-            try:
-                pipeline_states = json.loads(pipeline_states_json_file.read())
-            except json.decoder.JSONDecodeError:
-                pipeline_states = {}
+        sem_tokens_generator = llama_semantic_tokens_generate(
+            prompt_text=[
+                "人间灯火倒映湖中，她的渴望让静水泛起涟漪。若代价只是孤独，那就让这份愿望肆意流淌。流入她所注视的世间，也流入她如湖水般澄澈的目光。"],
+            prompt_tokens=[Path("4_output_trained.npy")],
+        )
 
         input_lines = []
         input_hash = ''
@@ -50,36 +34,39 @@ if __name__ == "__main__":
             m.update(str.encode(file_content))
             input_hash = m.hexdigest()
 
-        if input_hash not in pipeline_states:
-            pipeline_states[input_hash] = {}
+        pipeline_states = PipelineStates(input_hash=input_hash)
 
-        if 'line_count' not in pipeline_states[input_hash]:
-            pipeline_states[input_hash]['line_count'] = len(input_lines)
-        
-        next_sem_tokens_input = ''
-
+        next_sem_tokens_input_lines = []
         try:
-            for line in input_lines:
-                m = sha1()
-                m.update(str.encode(line))
-                line_hash = m.hexdigest()
-
-                if 'processed_lines' in pipeline_states[input_hash] and line_hash in pipeline_states[input_hash]['processed_lines']:
+            for index, line in enumerate(input_lines):
+                if pipeline_states.is_line_processed(index):
                     continue
-                
-                tmp_next_input = f"{next_sem_tokens_input}\n{line}"
 
-                if len(tmp_next_input) > max_sem_input_count:
-                    wrapped_generate_semantic_tokens(next_sem_tokens_input, input_hash)
-                    pipeline_states[input_hash]['processed_lines'] = list((set() if 'processed_lines' not in pipeline_states[input_hash] else set(pipeline_states[input_hash])).union({
-                        line_hash
-                    }))
+                tmp_next_input_lines = next_sem_tokens_input_lines + \
+                    [(index, line)]
+
+                if len("\n".join([line for (_, line) in tmp_next_input_lines])) > max_sem_input_count:
+                    sem_tokens_generator.generate(
+                        text='\n'.join(
+                            [line for (_, line) in next_sem_tokens_input_lines]),
+                        output_name=path.join(
+                            sem_tokens_output_dir, f"{input_hash}_{next_sem_tokens_input_lines[0][0]}_{next_sem_tokens_input_lines[-1][0]}"
+                        )
+                    )
+
+                    for (pi, _) in next_sem_tokens_input_lines:
+                        pipeline_states.save_processed_line(pi)
+
+                    pipeline_states.save()
+
+                    next_sem_tokens_input_lines = [(index, line)]
                 else:
-                    next_sem_tokens_input = tmp_next_input
+                    next_sem_tokens_input_lines = tmp_next_input_lines
         except Exception as e:
             logger.error(f"Unable to generate semantic tokens: {e}")
         finally:
-            save_pipeline_states()
+            pipeline_states.save()
     except KeyboardInterrupt:
-        save_pipeline_states()
+        if pipeline_states is not None:
+            pipeline_states.save()
         sys.exit(130)
