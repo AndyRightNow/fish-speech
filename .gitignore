@@ -30,3 +30,5 @@ asr-label*
 /example
 /faster_whisper
 /.gradio
+
+input.txt
