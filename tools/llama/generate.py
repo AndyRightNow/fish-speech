@@ -998,53 +998,53 @@ def launch_thread_safe_queue_agent(
     return input_queue, tokenizer, config
 
 
-@click.command()
-@click.option(
-    "--text",
-    type=str,
-    default="你说的对, 但是原神是一款由米哈游自主研发的开放世界手游.",
-)
-@click.option("--prompt-text", type=str, default=None, multiple=True)
-@click.option(
-    "--prompt-tokens",
-    type=click.Path(path_type=Path, exists=True),
-    default=None,
-    multiple=True,
-)
-@click.option("--num-samples", type=int, default=1)
-@click.option("--max-new-tokens", type=int, default=0)
-@click.option("--top-p", type=float, default=0.7)
-@click.option("--repetition-penalty", type=float, default=1.2)
-@click.option("--temperature", type=float, default=0.7)
-@click.option(
-    "--checkpoint-path",
-    type=click.Path(path_type=Path, exists=True),
-    default="checkpoints/fish-speech-1.4",
-)
-@click.option("--device", type=str, default="cuda")
-@click.option("--compile/--no-compile", default=False)
-@click.option("--seed", type=int, default=42)
-@click.option("--half/--no-half", default=False)
-@click.option("--iterative-prompt/--no-iterative-prompt", default=True)
-@click.option("--chunk-length", type=int, default=100)
+# @click.command()
+# @click.option(
+#     "--text",
+#     type=str,
+#     default="你说的对, 但是原神是一款由米哈游自主研发的开放世界手游.",
+# )
+# @click.option("--prompt-text", type=str, default=None, multiple=True)
+# @click.option(
+#     "--prompt-tokens",
+#     type=click.Path(path_type=Path, exists=True),
+#     default=None,
+#     multiple=True,
+# )
+# @click.option("--num-samples", type=int, default=1)
+# @click.option("--max-new-tokens", type=int, default=0)
+# @click.option("--top-p", type=float, default=0.7)
+# @click.option("--repetition-penalty", type=float, default=1.2)
+# @click.option("--temperature", type=float, default=0.7)
+# @click.option(
+#     "--checkpoint-path",
+#     type=click.Path(path_type=Path, exists=True),
+#     default="checkpoints/fish-speech-1.4",
+# )
+# @click.option("--device", type=str, default="cuda")
+# @click.option("--compile/--no-compile", default=False)
+# @click.option("--seed", type=int, default=42)
+# @click.option("--half/--no-half", default=False)
+# @click.option("--iterative-prompt/--no-iterative-prompt", default=True)
+# @click.option("--chunk-length", type=int, default=100)
 def main(
     text: str,
     prompt_text: Optional[list[str]],
     prompt_tokens: Optional[list[Path]],
-    num_samples: int,
-    max_new_tokens: int,
-    top_p: int,
-    repetition_penalty: float,
-    temperature: float,
-    checkpoint_path: Path,
-    device: str,
-    compile: bool,
-    seed: int,
-    half: bool,
-    iterative_prompt: bool,
-    chunk_length: int,
+    output_name: str,
+    num_samples: int =1,
+    max_new_tokens: int = 0,
+    top_p: float = 0.7,
+    repetition_penalty: float = 1.2,
+    temperature: float = 0.7,
+    checkpoint_path: Path = Path("checkpoints/fish-speech-1.5"),
+    device: str = "cuda",
+    compile: bool = True,
+    seed: int = 42,
+    half: bool = False,
+    iterative_prompt: bool = True,
+    chunk_length: int = 100
 ) -> None:
-
     precision = torch.half if half else torch.bfloat16
 
     if prompt_text is not None and len(prompt_text) != len(prompt_tokens):
@@ -1096,14 +1096,16 @@ def main(
     idx = 0
     codes = []
 
+    file_name = f"{output_name}_{idx}.npy"
+
     for response in generator:
         if response.action == "sample":
             codes.append(response.codes)
             logger.info(f"Sampled text: {response.text}")
         elif response.action == "next":
             if codes:
-                np.save(f"codes_{idx}.npy", torch.cat(codes, dim=1).cpu().numpy())
-                logger.info(f"Saved codes to codes_{idx}.npy")
+                np.save(file_name, torch.cat(codes, dim=1).cpu().numpy())
+                logger.info(f"Saved codes to{file_name}")
             logger.info(f"Next sample")
             codes = []
             idx += 1
