@@ -6,7 +6,7 @@ import torchaudio
 from typing import Any
 from loguru import logger
 
-from inference import load_model
+from .inference import load_model
 
 from tools.file import AUDIO_EXTENSIONS
 
@@ -14,7 +14,7 @@ from tools.file import AUDIO_EXTENSIONS
 class VQGanInference:
     __model: Any = None
     __device = ''
-
+    
     def __init__(
         self,
         config_name="firefly_gan_vq",
@@ -23,7 +23,6 @@ class VQGanInference:
     ):
         self.__model = load_model(config_name, checkpoint_path, device=device)
         self.__device = device
-        pass
 
     def __restore(self, indices, output_path):
         # Restore
@@ -45,6 +44,7 @@ class VQGanInference:
                  self.__model.spec_transform.sample_rate)
         logger.info(f"Saved audio to {output_path}")
 
+    @torch.no_grad()
     def generate_from_npy(self, input_path, output_path):
         assert input_path.suffix == ".npy"
 
@@ -55,6 +55,7 @@ class VQGanInference:
 
         self.__restore(indices=indices, output_path=output_path)
 
+    @torch.no_grad()
     def generate_from_audio(self, input_path, output_path):
         assert input_path.suffix in AUDIO_EXTENSIONS
         logger.info(f"Processing in-place reconstruction of {input_path}")

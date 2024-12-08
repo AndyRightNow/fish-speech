@@ -1,3 +1,4 @@
+from typing import Any
 from loguru import logger
 from constants import base_dir
 from os import path
@@ -7,7 +8,7 @@ pipeline_states_json_path = "states.json"
 
 
 class PipelineStates:
-    __states = {}
+    __states: Any = {}
     __input_hash = ''
 
     def __init__(self, input_hash):
@@ -37,3 +38,6 @@ class PipelineStates:
 
     def is_line_processed(self, index):
         return 'processed_lines' in self.__states[self.__input_hash] and index in self.__states[self.__input_hash]['processed_lines']
+
+    def get_processed_segments(self):
+        return self.__states.get(self.__input_hash).get('processed_segments')

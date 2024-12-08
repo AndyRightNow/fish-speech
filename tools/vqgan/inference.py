@@ -18,6 +18,7 @@ OmegaConf.register_new_resolver("eval", eval)
 
 
 def load_model(config_name, checkpoint_path, device="cuda"):
+    logger.info(f"Current CUDA allocated memory: {torch.cuda.memory_allocated(0)}")
     hydra.core.global_hydra.GlobalHydra.instance().clear()
     with initialize(version_base="1.3", config_path="../../fish_speech/configs"):
         cfg = compose(config_name=config_name)
@@ -41,6 +42,7 @@ def load_model(config_name, checkpoint_path, device="cuda"):
     model.to(device)
 
     logger.info(f"Loaded model: {result}")
+    logger.info(f"Current CUDA allocated memory: {torch.cuda.memory_allocated(0)}")
     return model
 
 
