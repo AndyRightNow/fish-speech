@@ -32,14 +32,17 @@ class TTSGenerator:
         self.__no_audio = no_audio
         self.__no_semantic_tokens = no_semantic_tokens
 
-    def generate(self, input_lines, input_hash):
+    def generate(self, input_lines, input_hash, no_audio=None, no_semantic_tokens=None):
         output_file_name = f"{input_hash}_{input_lines[0][0]}_{input_lines[-1][0]}"
         output_base_sem_tokens_name = path.join(
             sem_tokens_output_dir, output_file_name
         )
         output_npy_name = f"{output_base_sem_tokens_name}_0.npy"
 
-        if not self.__no_semantic_tokens:
+        no_audio = no_audio if no_audio is not None else self.__no_audio
+        no_semantic_tokens = no_semantic_tokens if no_semantic_tokens is not None else self.__no_semantic_tokens
+
+        if not no_semantic_tokens:
             if not Path(output_npy_name).is_file():
                 logger.info(
                     f"{output_npy_name} doesn't exist, start generating..")
@@ -47,7 +50,7 @@ class TTSGenerator:
                     text='\n'.join(
                         [line for (_, line) in input_lines]),
                     output_name=output_base_sem_tokens_name,
-                    temperature=uniform(0.7, 1.5),
+                    temperature=uniform(0.7, 1.1),
                     repetition_penalty=uniform(1.2, 1.6),
                     top_p=uniform(0.7, 0.8),
                 )
@@ -58,7 +61,7 @@ class TTSGenerator:
         output_wav_name = path.join(
             constants.audio_output_dir, f"{output_file_name}.wav")
 
-        if not self.__no_audio:
+        if not no_audio:
             if Path(output_npy_name).is_file() and not Path(output_wav_name).is_file():
                 logger.info(
                     f"{output_wav_name} doesn't exist, start generating..")

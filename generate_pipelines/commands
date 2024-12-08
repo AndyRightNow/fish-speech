@@ -1,0 +1,2 @@
+python generate_pipelines/main.py --prompt-name tifa_trained --input-file we-after-everything.txt
+python generate_pipelines/main.py

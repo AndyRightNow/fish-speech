@@ -31,10 +31,7 @@ asr-label*
 /faster_whisper
 /.gradio
 
-generate_pipelines/output/**/*.npy
-generate_pipelines/output/**/*.wav
-generate_pipelines/output/**/*.txt
-generate_pipelines/output/**/*.mp3
-generate_pipelines/input/**/*.txt
+generate_pipelines/output/**/*
+generate_pipelines/input/**/*
 
 __archived

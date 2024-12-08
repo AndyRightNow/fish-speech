@@ -45,7 +45,7 @@ def main(no_audio, no_semantic_tokens, prompt_name, input_file):
         generator = TTSGenerator(
             prompt_text=[
                 Path(path.join(constants.base_dir,
-                     f"{prompt_name}.txt")).read_text()
+                     f"{prompt_name}.txt")).read_text(encoding='utf-8')
             ],
             prompt_tokens=[
                 Path(path.join(constants.base_dir, f"{prompt_name}.npy"))
@@ -67,7 +67,9 @@ def main(no_audio, no_semantic_tokens, prompt_name, input_file):
                     t0 = time.perf_counter()
                     generator.generate(
                         input_hash=input.input_hash,
-                        input_lines=next_sem_tokens_input_lines
+                        input_lines=next_sem_tokens_input_lines,
+                        no_audio=pipeline_states.is_segment_processed(
+                            [next_sem_tokens_input_lines[0][0], next_sem_tokens_input_lines[-1][0]])
                     )
                     time_per_line = (
                         current_time_per_line + (time.perf_counter() - t0) / len(next_sem_tokens_input_lines)) / (1 if current_time_per_line == 0 else 2)
