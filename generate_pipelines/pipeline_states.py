@@ -1,8 +1,7 @@
 from loguru import logger
-from .constants import base_dir
+from constants import base_dir
 from os import path
 import json
-from hashlib import sha256, sha1
 
 pipeline_states_json_path = "states.json"
 
@@ -28,9 +27,13 @@ class PipelineStates:
             logger.info("Updating pipeline states")
             pipeline_states_json_file.write(json.dumps(self.__states))
 
-    def save_processed_line(self, index):
+    def save_processed_lines(self, indices):
         self.__states[self.__input_hash]['processed_lines'] = (
-            [] if 'processed_lines' not in self.__states[self.__input_hash] else self.__states[self.__input_hash]['processed_lines']) + [index]
+            [] if 'processed_lines' not in self.__states[self.__input_hash] else self.__states[self.__input_hash]['processed_lines']) + indices
+
+        self.__states[self.__input_hash]['processed_segments'] = ([] if 'processed_segments' not in self.__states[self.__input_hash] else self.__states[self.__input_hash]['processed_segments']) + [[
+            indices[0], indices[-1]
+        ]]
 
     def is_line_processed(self, index):
         return 'processed_lines' in self.__states[self.__input_hash] and index in self.__states[self.__input_hash]['processed_lines']

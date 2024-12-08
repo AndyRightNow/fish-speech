@@ -9,7 +9,7 @@ from loguru import logger
 from .generate import generate_long, load_model
 
 
-class llama_semantic_tokens_generate:
+class LlamaSemanticTokensGenerator:
     __model = None
     __device = ''
     __prompt_text = []
