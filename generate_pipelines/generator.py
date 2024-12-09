@@ -1,3 +1,4 @@
+from utils import get_intermediate_output_base_name
 from tools.llama.generate_class import LlamaSemanticTokensGenerator
 from tools.vqgan.inference_class import VQGanInference
 from typing import Any
@@ -23,53 +24,78 @@ class TTSGenerator:
                 prompt_tokens=prompt_tokens,
             )
         else:
-            logger.info("no_semantic_tokens=True specified. Skipped semantic tokens models loading.")
+            logger.info(
+                "no_semantic_tokens=True specified. Skipped semantic tokens models loading.")
         if not no_audio:
             self.__audio_generator = VQGanInference()
         else:
-            logger.info("no_audio=True specified. Skipped audio models loading.")
+            logger.info(
+                "no_audio=True specified. Skipped audio models loading.")
 
         self.__no_audio = no_audio
         self.__no_semantic_tokens = no_semantic_tokens
 
-    def generate(self, input_lines, input_hash, no_audio=None, no_semantic_tokens=None):
-        output_file_name = f"{input_hash}_{input_lines[0][0]}_{input_lines[-1][0]}"
+    def generate(
+        self,
+        input_lines,
+        input_hash,
+        no_audio=None,
+        no_semantic_tokens=None,
+        force=False,
+    ):
+        output_base_sem_tokens_dir = path.join(
+            sem_tokens_output_dir, input_hash
+        )
+        output_base_audio_dir = path.join(
+            constants.audio_output_dir, input_hash)
+        Path(output_base_sem_tokens_dir).mkdir(parents=True, exist_ok=True)
+        Path(output_base_audio_dir).mkdir(parents=True, exist_ok=True)
+
+        output_file_name = get_intermediate_output_base_name(
+            input_lines[0][0], input_lines[-1][0])
         output_base_sem_tokens_name = path.join(
-            sem_tokens_output_dir, output_file_name
+            output_base_sem_tokens_dir, output_file_name
         )
         output_npy_name = f"{output_base_sem_tokens_name}_0.npy"
 
         no_audio = no_audio if no_audio is not None else self.__no_audio
         no_semantic_tokens = no_semantic_tokens if no_semantic_tokens is not None else self.__no_semantic_tokens
 
-        if not no_semantic_tokens:
-            if not Path(output_npy_name).is_file():
+        if not no_semantic_tokens or force:
+            if not Path(output_npy_name).is_file() or force:
                 logger.info(
                     f"{output_npy_name} doesn't exist, start generating..")
                 self.__sem_tokens_generator.generate(
                     text='\n'.join(
                         [line for (_, line) in input_lines]),
                     output_name=output_base_sem_tokens_name,
-                    temperature=uniform(0.7, 1.1),
-                    repetition_penalty=uniform(1.2, 1.6),
+                    temperature=uniform(0.7, 0.9),
                     top_p=uniform(0.7, 0.8),
                 )
             else:
                 logger.success(
                     f"{output_npy_name} already exists. Skipped npy generation.")
+        else:
+            logger.info(
+                "no_semantic_tokens=True specified. Skipped semantic tokens generation.")
 
         output_wav_name = path.join(
-            constants.audio_output_dir, f"{output_file_name}.wav")
+            output_base_audio_dir, f"{output_file_name}.wav")
 
-        if not no_audio:
-            if Path(output_npy_name).is_file() and not Path(output_wav_name).is_file():
+        if not no_audio or force:
+            if Path(output_npy_name).is_file() and (not Path(output_wav_name).is_file() or force):
                 logger.info(
                     f"{output_wav_name} doesn't exist, start generating..")
                 self.__audio_generator.generate_from_npy(
                     input_path=Path(output_npy_name),
-                    output_path=Path(path.join(
-                        constants.audio_output_dir, f"{output_file_name}.wav"))
+                    output_path=Path(output_wav_name)
                 )
             else:
                 logger.success(
                     f"{output_wav_name} already exists. Skipped audio generation.")
+        else:
+            logger.info("no_audio=True specified. Skipped audio generation.")
+
+        if force:
+            logger.warning(
+                f"Forced the generation of {output_npy_name} and {output_wav_name}")

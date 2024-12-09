@@ -1,4 +1,4 @@
-from tools.llama.generate_class import LlamaSemanticTokensGenerator
+from utils import use_shared_command_options
 from generator import TTSGenerator
 from pathlib import Path
 from loguru import logger
@@ -9,10 +9,9 @@ from pipeline_states import PipelineStates
 import sys
 import constants
 from os import path
+from traceback import print_exception
 import warnings
 from input import Input
-
-max_sem_input_count = 1000
 
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=UserWarning)
@@ -29,17 +28,8 @@ warnings.filterwarnings('ignore', category=UserWarning)
     type=bool,
     default=False
 )
-@click.option(
-    "--prompt-name",
-    type=str,
-    default="generic_higher_pitch_male"
-)
-@click.option(
-    "--input-file",
-    type=str,
-    default="input.txt"
-)
-def main(no_audio, no_semantic_tokens, prompt_name, input_file):
+@use_shared_command_options
+def main(no_audio, no_semantic_tokens, prompt_name, input_name, force_segment_index, max_sem_input_count, start_segment_index):
     pipeline_states = None
     try:
         generator = TTSGenerator(
@@ -53,42 +43,36 @@ def main(no_audio, no_semantic_tokens, prompt_name, input_file):
             no_audio=no_audio,
             no_semantic_tokens=no_semantic_tokens
         )
-        input = Input(input_file)
+        input = Input(
+            f"{input_name}.txt", max_sem_input_count=max_sem_input_count, prompt_name=prompt_name)
         pipeline_states = PipelineStates(input_hash=input.input_hash)
         current_time_per_line = 0
 
-        next_sem_tokens_input_lines = []
         try:
-            for index, line in enumerate(input.input_lines):
-                tmp_next_input_lines = next_sem_tokens_input_lines + \
-                    [(index, line)]
+            logger.info(f"Start generating from segment index {start_segment_index}")
+            for segment_index, segment in input.input_segments[start_segment_index:]:
+                t0 = time.perf_counter()
+                generator.generate(
+                    input_hash=input.input_hash,
+                    input_lines=segment,
+                    no_audio=pipeline_states.is_segment_processed(
+                        segment, segment_index),
+                    force=segment_index in force_segment_index
+                )
+                time_per_line = (
+                    current_time_per_line + (time.perf_counter() - t0) / len(segment)) / (1 if current_time_per_line == 0 else 2)
+                finish_time = datetime.fromtimestamp(
+                    datetime.now().timestamp() + len(segment) * time_per_line
+                ).strftime('%y-%m-%d %H:%M:%S')
+                logger.info(f"Estimated finish time: {finish_time}")
+                current_time_per_line = time_per_line
 
-                if len("\n".join([line for (_, line) in tmp_next_input_lines])) > max_sem_input_count:
-                    t0 = time.perf_counter()
-                    generator.generate(
-                        input_hash=input.input_hash,
-                        input_lines=next_sem_tokens_input_lines,
-                        no_audio=pipeline_states.is_segment_processed(
-                            [next_sem_tokens_input_lines[0][0], next_sem_tokens_input_lines[-1][0]])
-                    )
-                    time_per_line = (
-                        current_time_per_line + (time.perf_counter() - t0) / len(next_sem_tokens_input_lines)) / (1 if current_time_per_line == 0 else 2)
-                    finish_time = datetime.fromtimestamp(
-                        datetime.now().timestamp() + (len(input.input_lines) - index - 1) * time_per_line
-                    ).strftime('%y-%m-%d %H:%M:%S')
-                    logger.info(f"Estimated finish time: {finish_time}")
-                    current_time_per_line = time_per_line
+                pipeline_states.save_processed_segment(segment, segment_index)
 
-                    pipeline_states.save_processed_lines(
-                        [pi for (pi, _) in next_sem_tokens_input_lines])
-
-                    pipeline_states.save()
-
-                    next_sem_tokens_input_lines = [(index, line)]
-                else:
-                    next_sem_tokens_input_lines = tmp_next_input_lines
+                pipeline_states.save()
         except Exception as e:
             logger.error(f"Unable to generate: {e}")
+            print_exception(e)
         finally:
             pipeline_states.save()
     except KeyboardInterrupt:

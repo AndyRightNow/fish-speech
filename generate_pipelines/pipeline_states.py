@@ -24,7 +24,24 @@ class PipelineStates:
 
         self.__input_hash = input_hash
 
+        self.__normalize_processed_info()
+
+    def __normalize_processed_info(self):
+        logger.info("Normalizing pipeline states")
+
+        self.__states[self.__input_hash]['processed_segments'] = [
+        ] if 'processed_segments' not in self.__states[self.__input_hash] else self.__states[self.__input_hash]['processed_segments']
+
+        self.__states[self.__input_hash]['processed_segments'] = sorted(
+            list({
+                x[0]: x for x in self.__states[self.__input_hash]['processed_segments']
+            }.values()),
+            key=lambda x: x[0]
+        )
+
     def save(self):
+        self.__normalize_processed_info()
+
         with open(path.join(base_dir, pipeline_states_json_path), 'w', encoding='utf-8') as pipeline_states_json_file:
             logger.info("Updating pipeline states")
             try:
@@ -35,22 +52,16 @@ class PipelineStates:
             except Exception as e:
                 logger.error(f"Unable to save pipeline states: {e}")
 
-    def save_processed_lines(self, indices):
-        self.__states[self.__input_hash]['processed_lines'] = list(set((
-            [] if 'processed_lines' not in self.__states[self.__input_hash] else self.__states[self.__input_hash]['processed_lines']) + indices))
-
+    def save_processed_segment(self, input_segment, segment_index):
         self.__states[self.__input_hash]['processed_segments'] = ([] if 'processed_segments' not in self.__states[self.__input_hash] else self.__states[self.__input_hash]['processed_segments']) + [[
-            indices[0], indices[-1]
+            segment_index, [input_segment[0][0], input_segment[-1][0]]
         ]]
-
-        self.__states[self.__input_hash]['processed_segments'] = list({
-            f"{x[0]}_{x[1]}": x for x in self.__states[self.__input_hash]['processed_segments']}.values())
-
-    def is_line_processed(self, index):
-        return 'processed_lines' in self.__states[self.__input_hash] and index in self.__states[self.__input_hash]['processed_lines']
 
     def get_processed_segments(self):
         return self.__states.get(self.__input_hash).get('processed_segments')
 
-    def is_segment_processed(self, segment):
-        return 'processed_segments' in self.__states[self.__input_hash] and segment in self.__states[self.__input_hash]['processed_segments']
+    def is_segment_processed(self, input_segment_or_segment, segment_index):
+        segment = input_segment_or_segment if isinstance(input_segment_or_segment[0], int) else [
+            line_index for (line_index, _) in input_segment_or_segment]
+
+        return 'processed_segments' in self.__states[self.__input_hash] and ([segment_index] + [segment]) in self.__states[self.__input_hash]['processed_segments']

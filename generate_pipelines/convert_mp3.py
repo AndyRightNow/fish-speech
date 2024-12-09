@@ -12,6 +12,7 @@ from multiprocessing import Pool
 from pipeline_states import PipelineStates
 import signal
 from input import Input
+from utils import get_intermediate_output_base_name, use_shared_command_options
 
 mp3_output_dir = path.join(constants.base_output_dir, "mp3")
 
@@ -25,13 +26,10 @@ def convert(wav_file_path, output_file_path, index, segment, tags):
 
 
 @click.command()
-@click.option(
-    "--input-name",
-    type=str,
-    default="input"
-)
-def main(input_name):
-    input = Input(f"{input_name}.txt")
+@use_shared_command_options
+def main(prompt_name, input_name, force_segment_index, max_sem_input_count, start_segment_index):
+    input = Input(f"{input_name}.txt",
+                  max_sem_input_count=max_sem_input_count, prompt_name=prompt_name)
     input_meta = json.loads(Path(path.join(
         constants.base_input_dir, 'meta', f"{input_name}.json")).read_text(encoding='utf-8'))
     pipeline_states = PipelineStates(input.input_hash)
@@ -44,6 +42,17 @@ def main(input_name):
         except FileExistsError:
             pass
 
+        processed_segments = pipeline_states.get_processed_segments()
+
+        if not len(processed_segments):
+            return
+
+        start_segment = next(
+            (x for x in processed_segments if x[0] == start_segment_index), processed_segments[0])
+
+        current_processed_segments = processed_segments[processed_segments.index(
+            start_segment):]
+
         try:
             convert_states['converted_segments'] = [
             ] if 'converted_segments' not in convert_states else convert_states['converted_segments']
@@ -51,14 +60,11 @@ def main(input_name):
             with Pool(initializer=signal.signal, initargs=(signal.SIGINT, signal.SIG_IGN)) as pool:
                 async_results = {}
                 queued_count = 0
-                processed_segments = pipeline_states.get_processed_segments()
 
                 try:
-                    for index, segment in enumerate(processed_segments):
-                        if segment in convert_states['converted_segments']:
+                    for index, segment in current_processed_segments:
+                        if segment in convert_states['converted_segments'] and index not in force_segment_index:
                             continue
-
-                        output_base_name = f"{input.input_hash}_{segment[0]}_{segment[1]}"
 
                         output_mp3_name = path.join(
                             current_input_mp3_output_dir, f"{index + 1}.mp3")
@@ -74,7 +80,8 @@ def main(input_name):
 
                         pool.apply_async(convert, (path.join(
                             constants.audio_output_dir,
-                            f"{output_base_name}.wav"
+                            input.input_hash,
+                            f"{get_intermediate_output_base_name(segment[0], segment[1])}.wav"
                         ), output_mp3_name, index, segment, input_meta['tags']), callback=callback, error_callback=error_callback)
 
                         queued_count += 1
