@@ -42,6 +42,7 @@ class TTSGenerator:
         no_audio=None,
         no_semantic_tokens=None,
         force=False,
+        segment_title='',
     ):
         output_base_sem_tokens_dir = path.join(
             sem_tokens_output_dir, input_hash
@@ -66,11 +67,12 @@ class TTSGenerator:
                 logger.info(
                     f"{output_npy_name} doesn't exist, start generating..")
                 self.__sem_tokens_generator.generate(
-                    text='\n'.join(
-                        [line for (_, line) in input_lines]),
+                    text='\n'.join(([] if not segment_title else [segment_title]) +
+                                   ([line for (_, line) in input_lines])),
                     output_name=output_base_sem_tokens_name,
                     temperature=uniform(0.7, 0.9),
                     top_p=uniform(0.7, 0.8),
+                    repetition_penalty=1.7
                 )
             else:
                 logger.success(

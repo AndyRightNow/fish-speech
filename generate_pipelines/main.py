@@ -17,6 +17,17 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=UserWarning)
 
 
+def __get_segment_title(segment_title_language, segment_index):
+    if segment_title_language == 'cn':
+        return f"第{segment_index + 1}段， ， ，"
+    if segment_title_language == 'en':
+        return f"Segment {segment_index + 1}, , ,"
+    if segment_title_language == 'ja':
+        return f"第{segment_index + 1}部分， ， ，"
+
+    return ''
+
+
 @click.command()
 @click.option(
     "--no-audio",
@@ -28,8 +39,28 @@ warnings.filterwarnings('ignore', category=UserWarning)
     type=bool,
     default=False
 )
+@click.option(
+    "--insert-segment-title",
+    type=bool,
+    default=False
+)
+@click.option(
+    "--segment-title-language",
+    type=click.types.Choice(["en", "cn", 'ja']),
+    default="cn"
+)
 @use_shared_command_options
-def main(no_audio, no_semantic_tokens, prompt_name, input_name, force_segment_index, max_sem_input_count, start_segment_index):
+def main(
+    no_audio,
+    no_semantic_tokens,
+    prompt_name,
+    input_name,
+    force_segment_index,
+    max_sem_input_count,
+    start_segment_index,
+    insert_segment_title,
+    segment_title_language,
+):
     pipeline_states = None
     try:
         generator = TTSGenerator(
@@ -49,7 +80,8 @@ def main(no_audio, no_semantic_tokens, prompt_name, input_name, force_segment_in
         current_time_per_line = 0
 
         try:
-            logger.info(f"Start generating from segment index {start_segment_index}")
+            logger.info(
+                f"Start generating from segment index {start_segment_index}")
             for segment_index, segment in input.input_segments[start_segment_index:]:
                 t0 = time.perf_counter()
                 generator.generate(
@@ -57,7 +89,9 @@ def main(no_audio, no_semantic_tokens, prompt_name, input_name, force_segment_in
                     input_lines=segment,
                     no_audio=pipeline_states.is_segment_processed(
                         segment, segment_index),
-                    force=segment_index in force_segment_index
+                    force=segment_index in force_segment_index,
+                    segment_title='' if not insert_segment_title else __get_segment_title(
+                        segment_title_language, segment_index)
                 )
                 time_per_line = (
                     current_time_per_line + (time.perf_counter() - t0) / len(segment)) / (1 if current_time_per_line == 0 else 2)

@@ -6,12 +6,12 @@ def use_shared_command_options(func):
     func = click.option(
         "--prompt-name",
         type=str,
-        default="midaoren"
+        required=True
     )(func)
     func = click.option(
         "--input-name",
         type=str,
-        default="input"
+        required=True
     )(func)
     func = click.option(
         "--force-segment-index",

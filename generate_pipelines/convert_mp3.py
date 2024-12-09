@@ -20,7 +20,7 @@ mp3_output_dir = path.join(constants.base_output_dir, "mp3")
 def convert(wav_file_path, output_file_path, index, segment, tags):
     AudioSegment.from_wav(
         wav_file_path
-    ).export(output_file_path, format="mp3", parameters=["-q:a", "0"], tags=tags)
+    ).export(output_file_path, format="mp3", parameters=["-q:a", "0", "-write_xing", "0"], tags=tags)
 
     return (index, segment)
 
