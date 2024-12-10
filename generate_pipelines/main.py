@@ -2,9 +2,8 @@ from utils import use_shared_command_options
 from generator import TTSGenerator
 from pathlib import Path
 from loguru import logger
-import time
+from m4b_util.subcommands import bind
 import click
-from datetime import datetime
 from pipeline_states import PipelineStates
 import sys
 import constants
@@ -77,13 +76,12 @@ def main(
         input = Input(
             f"{input_name}.txt", max_sem_input_count=max_sem_input_count, prompt_name=prompt_name)
         pipeline_states = PipelineStates(input_hash=input.input_hash)
-        current_time_per_line = 0
 
         try:
             logger.info(
                 f"Start generating from segment index {start_segment_index}")
+
             for segment_index, segment in input.input_segments[start_segment_index:]:
-                t0 = time.perf_counter()
                 generator.generate(
                     input_hash=input.input_hash,
                     input_lines=segment,
@@ -93,13 +91,6 @@ def main(
                     segment_title='' if not insert_segment_title else __get_segment_title(
                         segment_title_language, segment_index)
                 )
-                time_per_line = (
-                    current_time_per_line + (time.perf_counter() - t0) / len(segment)) / (1 if current_time_per_line == 0 else 2)
-                finish_time = datetime.fromtimestamp(
-                    datetime.now().timestamp() + len(segment) * time_per_line
-                ).strftime('%y-%m-%d %H:%M:%S')
-                logger.info(f"Estimated finish time: {finish_time}")
-                current_time_per_line = time_per_line
 
                 pipeline_states.save_processed_segment(segment, segment_index)
 

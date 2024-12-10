@@ -1,4 +1,4 @@
 python generate_pipelines/main.py --prompt-name tifa --input-name we-after-everything --insert-segment-title true --segment-title-language en --max-sem-input-count 2500
 python generate_pipelines/main.py --prompt-name weisan --input-name hengxingshike --start-segment-index 87
-python generate_pipelines/convert_mp3.py --input-name we-after-everything --prompt-name tifa  --start-segment-index 804
+python generate_pipelines/convert_mp3.py --input-name we-after-everything --prompt-name tifa --max-sem-input-count 2500
 python generate_pipelines/convert_mp3.py --input-name hengxingshike --prompt-name weisan
