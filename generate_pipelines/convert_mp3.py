@@ -1,4 +1,3 @@
-from loguru import logger
 from pydub import AudioSegment
 from os import mkdir
 import constants
@@ -11,8 +10,9 @@ import json
 from multiprocessing import Pool
 from pipeline_states import PipelineStates
 import signal
+from loguru import logger as loguru_logger
 from input import Input
-from utils import get_intermediate_output_base_name, use_shared_command_options
+from utils import get_intermediate_output_base_name, use_shared_command_options, generate_pipelines_logger as logger
 
 mp3_output_dir = path.join(constants.base_output_dir, "mp3")
 
@@ -27,6 +27,7 @@ def convert(wav_file_path, output_file_path, index, segment, tags):
 
 @click.command()
 @use_shared_command_options
+@logger.catch
 def main(prompt_name, input_name, force_segment_index, max_sem_input_count, start_segment_index):
     input = Input(f"{input_name}.txt",
                   max_sem_input_count=max_sem_input_count, prompt_name=prompt_name)
@@ -53,48 +54,45 @@ def main(prompt_name, input_name, force_segment_index, max_sem_input_count, star
         current_processed_segments = processed_segments[processed_segments.index(
             start_segment):]
 
-        try:
-            convert_states['converted_segments'] = [
-            ] if 'converted_segments' not in convert_states else convert_states['converted_segments']
+        convert_states['converted_segments'] = [
+        ] if 'converted_segments' not in convert_states else convert_states['converted_segments']
 
-            with Pool(initializer=signal.signal, initargs=(signal.SIGINT, signal.SIG_IGN)) as pool:
-                async_results = {}
-                queued_count = 0
+        with Pool(initializer=signal.signal, initargs=(signal.SIGINT, signal.SIG_IGN)) as pool:
+            async_results = {}
+            queued_count = 0
 
-                try:
-                    for index, segment in current_processed_segments:
-                        if segment in convert_states['converted_segments'] and index not in force_segment_index:
-                            continue
+            try:
+                for index, segment in current_processed_segments:
+                    if segment in convert_states['converted_segments'] and index not in force_segment_index:
+                        continue
 
-                        output_mp3_name = path.join(
-                            current_input_mp3_output_dir, f"{index + 1}.mp3")
+                    output_mp3_name = path.join(
+                        current_input_mp3_output_dir, f"{index + 1}.mp3")
 
-                        def callback(result):
-                            (finished_index, finished_segment) = result
-                            async_results[finished_index] = True
+                    def callback(result):
+                        (finished_index, finished_segment) = result
+                        async_results[finished_index] = True
 
-                            convert_states['converted_segments'] += [finished_segment]
+                        convert_states['converted_segments'] += [finished_segment]
 
-                        def error_callback(e):
-                            raise e
+                    def error_callback(e):
+                        raise e
 
-                        pool.apply_async(convert, (path.join(
-                            constants.audio_output_dir,
-                            input.input_hash,
-                            f"{get_intermediate_output_base_name(segment[0], segment[1])}.wav"
-                        ), output_mp3_name, index, segment, input_meta['tags']), callback=callback, error_callback=error_callback)
+                    pool.apply_async(convert, (path.join(
+                        constants.audio_output_dir,
+                        input.input_hash,
+                        f"{get_intermediate_output_base_name(segment[0], segment[1])}.wav"
+                    ), output_mp3_name, index, segment, input_meta['tags']), callback=callback, error_callback=error_callback)
 
-                        queued_count += 1
+                    queued_count += 1
 
-                    while len(async_results.keys()) != queued_count:
-                        logger.info(
-                            f"Progress: {len(async_results.keys())}/{queued_count}")
-                        time.sleep(1)
+                while len(async_results.keys()) != queued_count:
+                    logger.info(
+                        f"Progress: {len(async_results.keys())}/{queued_count}")
+                    time.sleep(1)
 
-                except KeyboardInterrupt:
-                    pool.close()
-        except Exception as e:
-            logger.error(f"Unable to convert mp3: {e}")
+            except KeyboardInterrupt:
+                pool.close()
 
 
 if __name__ == "__main__":

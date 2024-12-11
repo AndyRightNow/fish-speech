@@ -33,5 +33,6 @@ asr-label*
 
 generate_pipelines/output/**/*
 generate_pipelines/input/**/*
+generate_pipelines/logs
 
 __archived

@@ -1,8 +1,8 @@
 from typing import Any
-from loguru import logger
 from constants import base_dir
 from os import path
 import json
+from utils import generate_pipelines_logger as logger
 
 pipeline_states_json_path = "states.json"
 
@@ -50,7 +50,7 @@ class PipelineStates:
                 if stringified_json:
                     pipeline_states_json_file.write(stringified_json)
             except Exception as e:
-                logger.error(f"Unable to save pipeline states: {e}")
+                logger.exception(f"Unable to save pipeline states: {e}")
 
     def save_processed_segment(self, input_segment, segment_index):
         self.__states[self.__input_hash]['processed_segments'] = ([] if 'processed_segments' not in self.__states[self.__input_hash] else self.__states[self.__input_hash]['processed_segments']) + [[

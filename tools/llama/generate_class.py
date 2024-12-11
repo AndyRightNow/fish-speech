@@ -5,8 +5,8 @@ import numpy as np
 import torch
 import torch._dynamo.config
 import torch._inductor.config
-from loguru import logger
 from .generate import generate_long, load_model
+import loguru
 
 
 class LlamaSemanticTokensGenerator:
@@ -15,6 +15,7 @@ class LlamaSemanticTokensGenerator:
     __prompt_text = []
     __prompt_tokens = []
     __decode_one_token = None
+    __logger = loguru.logger
 
     def __init__(
         self,
@@ -25,7 +26,10 @@ class LlamaSemanticTokensGenerator:
         compile: bool = True,
         seed: int = 42,
         half: bool = False,
+        logger=loguru.logger
     ):
+        self.__logger = logger
+
         precision = torch.half if half else torch.bfloat16
 
         if prompt_text is not None and len(prompt_text) != len(prompt_tokens):
@@ -102,13 +106,13 @@ class LlamaSemanticTokensGenerator:
         for response in generator:
             if response.action == "sample":
                 codes.append(response.codes)
-                logger.info(f"Sampled text: {response.text}")
+                self.__logger.info(f"Sampled text: {response.text}")
             elif response.action == "next":
                 if codes:
                     np.save(file_name, torch.cat(codes, dim=1).cpu().numpy())
-                    logger.info(f"Saved codes to{file_name}")
-                logger.info(f"Next sample")
+                    self.__logger.info(f"Saved codes to{file_name}")
+                self.__logger.info(f"Next sample")
                 codes = []
                 idx += 1
             else:
-                logger.error(f"Error: {response}")
+                self.__logger.error(f"Error: {response}")

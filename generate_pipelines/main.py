@@ -1,7 +1,6 @@
-from utils import use_shared_command_options
+from utils import use_shared_command_options, generate_pipelines_logger as logger
 from generator import TTSGenerator
 from pathlib import Path
-from loguru import logger
 from m4b_util.subcommands import bind
 import click
 from pipeline_states import PipelineStates
@@ -96,7 +95,7 @@ def main(
 
                 pipeline_states.save()
         except Exception as e:
-            logger.error(f"Unable to generate: {e}")
+            logger.exception(f"Unable to generate: {e}")
             print_exception(e)
         finally:
             pipeline_states.save()

@@ -1,7 +1,7 @@
-from loguru import logger
 from os import path
 from hashlib import sha256
 import constants
+from utils import generate_pipelines_logger as logger
 
 
 class Input:
