@@ -1,7 +1,6 @@
 from utils import use_shared_command_options, generate_pipelines_logger as logger
 from generator import TTSGenerator
 from pathlib import Path
-from m4b_util.subcommands import bind
 import click
 from pipeline_states import PipelineStates
 import sys
