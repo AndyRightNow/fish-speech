@@ -61,7 +61,8 @@ def main(
                     encoding="utf-8"
                 )
             ],
-            prompt_tokens=[Path(path.join(constants.base_dir, f"{prompt_name}.npy"))],
+            prompt_tokens=[
+                Path(path.join(constants.base_dir, f"{prompt_name}.npy"))],
             no_audio=no_audio,
             no_semantic_tokens=no_semantic_tokens,
         )
@@ -73,12 +74,15 @@ def main(
         pipeline_states = PipelineStates(input_hash=input.input_hash)
 
         try:
-            logger.info(f"Start generating from segment index {start_segment_index}")
+            logger.info(
+                f"Start generating from segment index {start_segment_index}")
 
             for segment_index, segment in input.input_segments[start_segment_index:]:
                 is_segment_processed = pipeline_states.is_segment_processed(
                     segment, segment_index
                 )
+                logger.info(
+                    f"The segment {segment_index + 1} has {'not' if not is_segment_processed else ''} been processed")
 
                 generator.generate(
                     input_hash=input.input_hash,
