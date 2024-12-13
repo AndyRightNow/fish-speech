@@ -32,7 +32,7 @@ asr-label*
 /.gradio
 
 generate_pipelines/output/**/*
-generate_pipelines/input/**/*
+generate_pipelines/input/*.txt
 generate_pipelines/logs
 
 __archived
