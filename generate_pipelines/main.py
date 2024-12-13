@@ -4,16 +4,18 @@ from traceback import print_exception
 from os import path
 from convert_mp3 import convert_mp3
 import constants
+import os
 import sys
 from pipeline_states import PipelineStates
 import click
+from loguru import logger as global_logger
 from pathlib import Path
+import importlib
 from generator import TTSGenerator
 from utils import use_shared_command_options, generate_pipelines_logger as logger
 import locale
 
 locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
-
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -53,6 +55,7 @@ def main(
     segment_title_language,
     generate_mp3,
 ):
+    colab_output = None
     pipeline_states = None
     try:
         generator = TTSGenerator(
@@ -108,6 +111,11 @@ def main(
                         prompt_name=prompt_name,
                         start_segment_index=start_segment_index,
                     )
+
+                if os.getenv('COLAB'):
+                    if not colab_output:
+                        colab_output = importlib.import_module('google.colab')
+                    output.clear()
 
         except Exception as e:
             logger.exception(f"Unable to generate: {e}")
