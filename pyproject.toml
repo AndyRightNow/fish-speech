@@ -46,8 +46,7 @@ dependencies = [
     "tiktoken>=0.8.0",
     "pydantic==2.9.2",
     "cachetools",
-    "click",
-    "m4b-util==0.4.1",
+    "click"
 ]
 
 [project.optional-dependencies]
