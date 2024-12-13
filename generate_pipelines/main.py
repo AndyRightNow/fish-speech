@@ -115,7 +115,7 @@ def main(
                 if os.getenv('COLAB'):
                     os.system("cls||clear")
                     if not colab_output:
-                        colab_output = importlib.import_module('google.colab').colab_output
+                        colab_output = importlib.import_module('google.colab').output
                     colab_output.clear()
 
         except Exception as e:
