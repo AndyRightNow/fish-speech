@@ -1,3 +1,7 @@
+import locale
+
+locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+
 from utils import use_shared_command_options, generate_pipelines_logger as logger
 from generator import TTSGenerator
 from pathlib import Path
