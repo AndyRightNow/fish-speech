@@ -35,10 +35,7 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
         current_input_mp3_output_dir = path.join(
             mp3_output_dir, input.input_hash)
 
-        try:
-            mkdir(current_input_mp3_output_dir)
-        except FileExistsError:
-            pass
+        Path(current_input_mp3_output_dir).mkdir(parents=True, exist_ok=True)
 
         processed_segments = pipeline_states.get_processed_segments()
 
