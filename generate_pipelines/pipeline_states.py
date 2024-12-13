@@ -1,5 +1,5 @@
 from typing import Any
-from constants import base_dir
+from constants import states_dir
 from os import path
 import json
 from utils import generate_pipelines_logger as logger
@@ -13,7 +13,7 @@ class PipelineStates:
 
     def __init__(self, input_hash):
         logger.info("Loading pipeline states")
-        with open(path.join(base_dir, pipeline_states_json_path), 'r', encoding='utf-8') as pipeline_states_json_file:
+        with open(path.join(states_dir, pipeline_states_json_path), 'r', encoding='utf-8') as pipeline_states_json_file:
             try:
                 self.__states = json.loads(pipeline_states_json_file.read())
             except json.decoder.JSONDecodeError:
