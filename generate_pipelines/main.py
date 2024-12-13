@@ -116,7 +116,7 @@ def main(
                     os.system("cls||clear")
                     if not colab_output:
                         colab_output = importlib.import_module('google.colab')
-                    output.clear()
+                    colab_output.clear()
 
         except Exception as e:
             logger.exception(f"Unable to generate: {e}")
