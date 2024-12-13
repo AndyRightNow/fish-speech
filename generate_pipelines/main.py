@@ -12,50 +12,34 @@ from generator import TTSGenerator
 from utils import use_shared_command_options, generate_pipelines_logger as logger
 import locale
 
-locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
 
 
-warnings.filterwarnings('ignore', category=FutureWarning)
-warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 def __get_segment_title(segment_title_language, segment_index):
-    if segment_title_language == 'cn':
+    if segment_title_language == "cn":
         return f"第{segment_index + 1}段， ， ，"
-    if segment_title_language == 'en':
+    if segment_title_language == "en":
         return f"Segment {segment_index + 1}, , ,"
-    if segment_title_language == 'ja':
+    if segment_title_language == "ja":
         return f"第{segment_index + 1}部分， ， ，"
 
-    return ''
+    return ""
 
 
 @click.command()
-@click.option(
-    "--no-audio",
-    type=bool,
-    default=False
-)
-@click.option(
-    "--no-semantic-tokens",
-    type=bool,
-    default=False
-)
-@click.option(
-    "--insert-segment-title",
-    type=bool,
-    default=False
-)
+@click.option("--no-audio", type=bool, default=False)
+@click.option("--no-semantic-tokens", type=bool, default=False)
+@click.option("--insert-segment-title", type=bool, default=False)
 @click.option(
     "--segment-title-language",
-    type=click.types.Choice(["en", "cn", 'ja']),
-    default="cn"
+    type=click.types.Choice(["en", "cn", "ja"]),
+    default="cn",
 )
-@click.option(
-    "--generate-mp3",
-    type=bool,
-    default=False
-)
+@click.option("--generate-mp3", type=bool, default=False)
 @use_shared_command_options
 def main(
     no_audio,
@@ -67,38 +51,46 @@ def main(
     start_segment_index,
     insert_segment_title,
     segment_title_language,
-    generate_mp3
+    generate_mp3,
 ):
     pipeline_states = None
     try:
         generator = TTSGenerator(
             prompt_text=[
-                Path(path.join(constants.base_dir,
-                     f"{prompt_name}.txt")).read_text(encoding='utf-8')
+                Path(path.join(constants.base_dir, f"{prompt_name}.txt")).read_text(
+                    encoding="utf-8"
+                )
             ],
-            prompt_tokens=[
-                Path(path.join(constants.base_dir, f"{prompt_name}.npy"))
-            ],
+            prompt_tokens=[Path(path.join(constants.base_dir, f"{prompt_name}.npy"))],
             no_audio=no_audio,
-            no_semantic_tokens=no_semantic_tokens
+            no_semantic_tokens=no_semantic_tokens,
         )
         input = Input(
-            f"{input_name}.txt", max_sem_input_count=max_sem_input_count, prompt_name=prompt_name)
+            f"{input_name}.txt",
+            max_sem_input_count=max_sem_input_count,
+            prompt_name=prompt_name,
+        )
         pipeline_states = PipelineStates(input_hash=input.input_hash)
 
         try:
-            logger.info(
-                f"Start generating from segment index {start_segment_index}")
+            logger.info(f"Start generating from segment index {start_segment_index}")
 
             for segment_index, segment in input.input_segments[start_segment_index:]:
+                is_segment_processed = pipeline_states.is_segment_processed(
+                    segment, segment_index
+                )
+
                 generator.generate(
                     input_hash=input.input_hash,
                     input_lines=segment,
-                    no_audio=pipeline_states.is_segment_processed(
-                        segment, segment_index),
+                    no_semantic_tokens=is_segment_processed,
+                    no_audio=is_segment_processed,
                     force=segment_index in force_segment_index,
-                    segment_title='' if not insert_segment_title else __get_segment_title(
-                        segment_title_language, segment_index)
+                    segment_title=(
+                        ""
+                        if not insert_segment_title
+                        else __get_segment_title(segment_title_language, segment_index)
+                    ),
                 )
 
                 pipeline_states.save_processed_segment(segment, segment_index)

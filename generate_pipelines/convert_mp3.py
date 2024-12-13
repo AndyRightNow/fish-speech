@@ -63,6 +63,15 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
                     output_mp3_name = path.join(
                         current_input_mp3_output_dir, f"{index + 1}.mp3")
 
+                    input_wav_name = path.join(
+                        constants.audio_output_dir,
+                        input.input_hash,
+                        f"{get_intermediate_output_base_name(segment[0], segment[1])}.wav"
+                    )
+
+                    if not Path(input_wav_name).exists():
+                        continue
+
                     def callback(result):
                         (finished_index, finished_segment) = result
                         async_results[finished_index] = True
@@ -70,13 +79,16 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
                         convert_states['converted_segments'] += [finished_segment]
 
                     def error_callback(e):
-                        raise e
+                        async_results[finished_index] = True
+                        logger.exception(f"Unable to convert to mp3: {e}")
 
-                    pool.apply_async(convert, (path.join(
-                        constants.audio_output_dir,
-                        input.input_hash,
-                        f"{get_intermediate_output_base_name(segment[0], segment[1])}.wav"
-                    ), output_mp3_name, index, segment, input_meta['tags']), callback=callback, error_callback=error_callback)
+                    pool.apply_async(convert, (
+                        input_wav_name,
+                        output_mp3_name,
+                        index,
+                        segment,
+                        input_meta['tags']
+                    ), callback=callback, error_callback=error_callback)
 
                     queued_count += 1
 
