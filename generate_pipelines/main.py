@@ -79,8 +79,7 @@ def main(
 
             for segment_index, segment in input.input_segments[start_segment_index:]:
                 is_segment_processed = pipeline_states.is_segment_processed(
-                    segment, segment_index
-                )
+                    segment_index)
                 logger.info(
                     f"The segment {segment_index} has {'' if  is_segment_processed else 'not'} been processed")
 
