@@ -60,8 +60,9 @@ class PipelineStates:
     def get_processed_segments(self):
         return self.__states.get(self.__input_hash).get('processed_segments')
 
-    def is_segment_processed(self, input_segment_or_segment, segment_index):
+    def is_segment_processed(self, segment_index):
         segment = input_segment_or_segment if isinstance(input_segment_or_segment[0], int) else [
             line_index for (line_index, _) in input_segment_or_segment]
 
-        return 'processed_segments' in self.__states[self.__input_hash] and ([segment_index] + [segment]) in self.__states[self.__input_hash]['processed_segments']
+        return 'processed_segments' in self.__states[self.__input_hash] and True in (seg_i == segment_index for (seg_i, _) in self.__states[self.__input_hash]
+                                                                                     ['processed_segments'])

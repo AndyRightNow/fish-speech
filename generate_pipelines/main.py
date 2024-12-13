@@ -82,7 +82,7 @@ def main(
                     segment, segment_index
                 )
                 logger.info(
-                    f"The segment {segment_index + 1} has {'not' if not is_segment_processed else ''} been processed")
+                    f"The segment {segment_index} has {'' if  is_segment_processed else 'not'} been processed")
 
                 generator.generate(
                     input_hash=input.input_hash,
