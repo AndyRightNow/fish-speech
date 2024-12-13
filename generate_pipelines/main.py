@@ -1,18 +1,19 @@
+from input import Input
+import warnings
+from traceback import print_exception
+from os import path
+from convert_mp3 import convert_mp3
+import constants
+import sys
+from pipeline_states import PipelineStates
+import click
+from pathlib import Path
+from generator import TTSGenerator
+from utils import use_shared_command_options, generate_pipelines_logger as logger
 import locale
 
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
-from utils import use_shared_command_options, generate_pipelines_logger as logger
-from generator import TTSGenerator
-from pathlib import Path
-import click
-from pipeline_states import PipelineStates
-import sys
-import constants
-from os import path
-from traceback import print_exception
-import warnings
-from input import Input
 
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=UserWarning)
@@ -50,6 +51,11 @@ def __get_segment_title(segment_title_language, segment_index):
     type=click.types.Choice(["en", "cn", 'ja']),
     default="cn"
 )
+@click.option(
+    "--generate-mp3",
+    type=bool,
+    default=False
+)
 @use_shared_command_options
 def main(
     no_audio,
@@ -61,6 +67,7 @@ def main(
     start_segment_index,
     insert_segment_title,
     segment_title_language,
+    generate_mp3
 ):
     pipeline_states = None
     try:
@@ -97,6 +104,16 @@ def main(
                 pipeline_states.save_processed_segment(segment, segment_index)
 
                 pipeline_states.save()
+
+                if generate_mp3:
+                    convert_mp3(
+                        force_segment_index=force_segment_index,
+                        input_name=input_name,
+                        max_sem_input_count=max_sem_input_count,
+                        prompt_name=prompt_name,
+                        start_segment_index=start_segment_index,
+                    )
+
         except Exception as e:
             logger.exception(f"Unable to generate: {e}")
             print_exception(e)

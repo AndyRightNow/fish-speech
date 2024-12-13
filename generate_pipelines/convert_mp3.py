@@ -10,7 +10,6 @@ import json
 from multiprocessing import Pool
 from pipeline_states import PipelineStates
 import signal
-from loguru import logger as loguru_logger
 from input import Input
 from utils import get_intermediate_output_base_name, use_shared_command_options, generate_pipelines_logger as logger
 
@@ -25,10 +24,8 @@ def convert(wav_file_path, output_file_path, index, segment, tags):
     return (index, segment)
 
 
-@click.command()
-@use_shared_command_options
 @logger.catch
-def main(prompt_name, input_name, force_segment_index, max_sem_input_count, start_segment_index):
+def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_count, start_segment_index):
     input = Input(f"{input_name}.txt",
                   max_sem_input_count=max_sem_input_count, prompt_name=prompt_name)
     input_meta = json.loads(Path(path.join(
@@ -93,6 +90,12 @@ def main(prompt_name, input_name, force_segment_index, max_sem_input_count, star
 
             except KeyboardInterrupt:
                 pool.close()
+
+
+@click.command()
+@use_shared_command_options
+def main(**kwargs):
+    convert_mp3(**kwargs)
 
 
 if __name__ == "__main__":
