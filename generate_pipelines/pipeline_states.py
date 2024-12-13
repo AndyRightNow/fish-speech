@@ -1,5 +1,5 @@
 from typing import Any
-from constants import states_dir
+from constants import states_dir, base_dir
 from os import path
 import json
 from utils import generate_pipelines_logger as logger
