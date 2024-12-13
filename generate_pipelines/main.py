@@ -84,7 +84,7 @@ def main(
                 is_segment_processed = pipeline_states.is_segment_processed(
                     segment_index)
                 logger.info(
-                    f"The segment {segment_index} has {'' if  is_segment_processed else 'not'} been processed")
+                    f"The segment {segment_index} has{'' if  is_segment_processed else ' not'} been processed")
 
                 generator.generate(
                     input_hash=input.input_hash,
@@ -113,6 +113,7 @@ def main(
                     )
 
                 if os.getenv('COLAB'):
+                    os.system("cls||clear")
                     if not colab_output:
                         colab_output = importlib.import_module('google.colab')
                     output.clear()
