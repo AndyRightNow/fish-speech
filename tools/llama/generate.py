@@ -364,7 +364,7 @@ def decode_n_tokens(
         device=cur_token.device,
     )
 
-    for i in trange(num_new_tokens, leave=False):
+    for i in trange(num_new_tokens, position=0, leave=False):
         # We need to get windowed repeat penalty
         win_size = 16
         if i < win_size:
@@ -801,7 +801,7 @@ def generate_long(
             torch.cuda.synchronize()
 
         global_encoded = []
-        for seg_idx in tqdm(range(len(encoded)), desc="Encoded: "):
+        for seg_idx in trange(len(encoded), position=0, desc="Encoded: "):
             logger.debug(
                 f"Generating sentence {seg_idx + 1}/{len(encoded)} of sample {sample_idx + 1}/{num_samples}"
             )
