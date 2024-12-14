@@ -109,6 +109,7 @@ def main(
                         max_sem_input_count=max_sem_input_count,
                         prompt_name=prompt_name,
                         start_segment_index=start_segment_index,
+                        pipeline_states=pipeline_states
                     )
 
         except Exception as e:

@@ -25,12 +25,15 @@ def convert(wav_file_path, output_file_path, index, segment, tags):
 
 
 @logger.catch
-def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_count, start_segment_index):
+def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_count, start_segment_index, pipeline_states=None):
     input = Input(f"{input_name}.txt",
                   max_sem_input_count=max_sem_input_count, prompt_name=prompt_name)
     input_meta = json.loads(Path(path.join(
         constants.base_input_dir, 'meta', f"{input_name}.json")).read_text(encoding='utf-8'))
-    pipeline_states = PipelineStates(input.input_hash)
+
+    if not pipeline_states:
+        pipeline_states = PipelineStates(input.input_hash)
+
     with shelve.open(path.join(constants.states_dir, f"convert_states_{input.input_hash}")) as convert_states:
         current_input_mp3_output_dir = path.join(
             mp3_output_dir, input.input_hash)
@@ -45,8 +48,13 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
         start_segment = next(
             (x for x in processed_segments if x[0] == start_segment_index), processed_segments[0])
 
+        logger.warning(f"start_segment {start_segment}")
+
         current_processed_segments = processed_segments[processed_segments.index(
             start_segment):]
+
+        logger.warning(
+            f"start_segment index {processed_segments.index(start_segment)}")
 
         convert_states['converted_segments'] = [
         ] if 'converted_segments' not in convert_states else convert_states['converted_segments']
@@ -58,7 +66,8 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
             try:
                 for index, segment in current_processed_segments:
                     if segment in convert_states['converted_segments'] and index not in force_segment_index:
-                        logger.info(f"Segment {index} has already been processed, skipped.")
+                        logger.info(
+                            f"Segment {index} has already been processed, skipped.")
                         continue
 
                     output_mp3_name = path.join(
@@ -71,7 +80,8 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
                     )
 
                     if not Path(input_wav_name).exists():
-                        logger.info(f"Segment {index} has no input wav file, skipped.")
+                        logger.info(
+                            f"Segment {index} has no input wav file, skipped.")
                         continue
 
                     def callback(result):
@@ -79,7 +89,8 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
                         async_results[finished_index] = True
 
                         convert_states['converted_segments'] += [finished_segment]
-                        logger.success(f"Generated segment {finished_index} to mp3 file.")
+                        logger.success(
+                            f"Generated segment {finished_index} to mp3 file.")
 
                     def error_callback(e):
                         async_results[finished_index] = True
