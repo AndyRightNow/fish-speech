@@ -55,7 +55,6 @@ def main(
     segment_title_language,
     generate_mp3,
 ):
-    colab_output = None
     pipeline_states = None
     try:
         generator = TTSGenerator(
@@ -111,12 +110,6 @@ def main(
                         prompt_name=prompt_name,
                         start_segment_index=start_segment_index,
                     )
-
-                if os.getenv('COLAB'):
-                    os.system("cls||clear")
-                    if not colab_output:
-                        colab_output = importlib.import_module('google.colab').output
-                    colab_output.clear()
 
         except Exception as e:
             logger.exception(f"Unable to generate: {e}")
