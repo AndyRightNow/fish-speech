@@ -15,8 +15,9 @@ def trace_output(func=None, stdout=True, stderr=True):
         def write(self, text):
             if text.strip():
                 stack = traceback.extract_stack()
+                caller_info = '\n'.join((l.strip() for l in traceback.format_list(stack)))
                 timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-                output = f"[{timestamp}] {stack} | {text}"
+                output = f"[{timestamp}] {caller_info} | {text}"
                 self.original_stream.write(output)
 
         def flush(self):
