@@ -16,7 +16,8 @@ class PipelineStates:
         with open(path.join(states_dir, pipeline_states_json_path), 'r', encoding='utf-8') as pipeline_states_json_file:
             try:
                 self.__states = json.loads(pipeline_states_json_file.read())
-            except json.decoder.JSONDecodeError:
+            except json.decoder.JSONDecodeError as e:
+                logger.error(f"Unable to parse pipeline states JSON: {e}")
                 self.__states = {}
 
         if input_hash not in self.__states:
@@ -49,6 +50,8 @@ class PipelineStates:
 
                 if stringified_json:
                     pipeline_states_json_file.write(stringified_json)
+                else:
+                    raise Exception("Empty states")
             except Exception as e:
                 logger.exception(f"Unable to save pipeline states: {e}")
 
