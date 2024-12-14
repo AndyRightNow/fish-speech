@@ -14,7 +14,7 @@ import torch
 import torch._dynamo.config
 import torch._inductor.config
 from loguru import logger
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from transformers import AutoTokenizer
 
 from fish_speech.conversation import (
@@ -364,7 +364,7 @@ def decode_n_tokens(
         device=cur_token.device,
     )
 
-    for i in range(num_new_tokens):
+    for i in tqdm(range(num_new_tokens)):
         # We need to get windowed repeat penalty
         win_size = 16
         if i < win_size:
@@ -496,7 +496,7 @@ def decode_n_tokens_agent(
     finished = finished | (cur_token[:, 0, -1] == im_end_id)
     start_time = time.time()
 
-    for i in range(num_new_tokens):
+    for i in tqdm(range(num_new_tokens), desc="Decoding: ", total=num_new_tokens):
         # We need to get windowed repeat penalty
         win_size = 16
         if i < win_size:
