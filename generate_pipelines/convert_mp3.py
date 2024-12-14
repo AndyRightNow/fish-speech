@@ -77,6 +77,7 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
                         async_results[finished_index] = True
 
                         convert_states['converted_segments'] += [finished_segment]
+                        logger.success(f"Generated segment {finished_index} to mp3 file.")
 
                     def error_callback(e):
                         async_results[finished_index] = True
