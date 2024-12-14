@@ -93,7 +93,7 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
                     queued_count += 1
 
                 while len(async_results.keys()) != queued_count:
-                    logger.info(
+                    logger.debug(
                         f"Progress: {len(async_results.keys())}/{queued_count}")
                     time.sleep(1)
 

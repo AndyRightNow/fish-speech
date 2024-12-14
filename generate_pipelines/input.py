@@ -14,7 +14,7 @@ class Input:
     input_segments = []
 
     def __init__(self, name, max_sem_input_count, prompt_name):
-        logger.info("Reading input file")
+        logger.debug("Reading input file")
         self.name = name
         with open(path.join(constants.base_input_dir, name), "r", encoding="utf-8") as input_file:
             file_content = input_file.read()
@@ -41,5 +41,5 @@ class Input:
                 char_count = 0
                 segment_index += 1
 
-        logger.info(f"Read {segment_index} segments from {name}")
+        logger.debug(f"Read {segment_index} segments from {name}")
             

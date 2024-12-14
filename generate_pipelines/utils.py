@@ -3,6 +3,12 @@ import click
 from loguru import _logger
 import constants
 import sys
+import os
+
+if os.getenv('LOG_LEVEL'):
+    os.environ['LOGURU_LEVEL'] = os.getenv('LOG_LEVEL')
+else:
+    os.environ['LOGURU_LEVEL'] = 'EXCEPTION'
 
 
 def use_shared_command_options(func):

@@ -12,7 +12,7 @@ class PipelineStates:
     __input_hash = ''
 
     def __init__(self, input_hash):
-        logger.info("Loading pipeline states")
+        logger.debug("Loading pipeline states")
         with open(path.join(states_dir, pipeline_states_json_path), 'r', encoding='utf-8') as pipeline_states_json_file:
             try:
                 self.__states = json.loads(pipeline_states_json_file.read())
@@ -27,7 +27,7 @@ class PipelineStates:
         self.__normalize_processed_info()
 
     def __normalize_processed_info(self):
-        logger.info("Normalizing pipeline states")
+        logger.debug("Normalizing pipeline states")
 
         self.__states[self.__input_hash]['processed_segments'] = [
         ] if 'processed_segments' not in self.__states[self.__input_hash] else self.__states[self.__input_hash]['processed_segments']
@@ -43,7 +43,7 @@ class PipelineStates:
         self.__normalize_processed_info()
 
         with open(path.join(base_dir, pipeline_states_json_path), 'w', encoding='utf-8') as pipeline_states_json_file:
-            logger.info("Updating pipeline states")
+            logger.debug("Updating pipeline states")
             try:
                 stringified_json = json.dumps(self.__states)
 

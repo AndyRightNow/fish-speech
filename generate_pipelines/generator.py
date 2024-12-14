@@ -24,12 +24,12 @@ class TTSGenerator:
                 logger=logger
             )
         else:
-            logger.info(
+            logger.debug(
                 "no_semantic_tokens=True specified. Skipped semantic tokens models loading.")
         if not no_audio:
             self.__audio_generator = VQGanInference()
         else:
-            logger.info(
+            logger.debug(
                 "no_audio=True specified. Skipped audio models loading.")
 
         self.__no_audio = no_audio
@@ -65,7 +65,7 @@ class TTSGenerator:
 
         if not no_semantic_tokens or force:
             if not Path(output_npy_name).is_file() or force:
-                logger.info(
+                logger.debug(
                     f"{output_npy_name} doesn't exist, start generating..")
 
                 genearte_success = False
@@ -95,7 +95,7 @@ class TTSGenerator:
                 logger.success(
                     f"{output_npy_name} already exists. Skipped npy generation.")
         else:
-            logger.info(
+            logger.debug(
                 "no_semantic_tokens=True specified. Skipped semantic tokens generation.")
 
         output_wav_name = path.join(
@@ -103,7 +103,7 @@ class TTSGenerator:
 
         if not no_audio or force:
             if Path(output_npy_name).is_file() and (not Path(output_wav_name).is_file() or force):
-                logger.info(
+                logger.debug(
                     f"{output_wav_name} doesn't exist, start generating..")
                 self.__audio_generator.generate_from_npy(
                     input_path=Path(output_npy_name),
@@ -113,7 +113,7 @@ class TTSGenerator:
                 logger.success(
                     f"{output_wav_name} already exists. Skipped audio generation.")
         else:
-            logger.info("no_audio=True specified. Skipped audio generation.")
+            logger.debug("no_audio=True specified. Skipped audio generation.")
 
         if force:
             logger.warning(
