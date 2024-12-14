@@ -1,5 +1,5 @@
 from typing import Any
-from constants import states_dir, base_dir
+from constants import states_dir
 from os import path
 import json
 from utils import generate_pipelines_logger as logger
@@ -43,7 +43,7 @@ class PipelineStates:
     def save(self):
         self.__normalize_processed_info()
 
-        with open(path.join(base_dir, pipeline_states_json_path), 'w', encoding='utf-8') as pipeline_states_json_file:
+        with open(path.join(states_dir, pipeline_states_json_path), 'w', encoding='utf-8') as pipeline_states_json_file:
             logger.debug("Updating pipeline states")
             try:
                 stringified_json = json.dumps(self.__states)
