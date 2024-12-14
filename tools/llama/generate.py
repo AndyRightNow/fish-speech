@@ -14,7 +14,7 @@ import torch
 import torch._dynamo.config
 import torch._inductor.config
 from loguru import logger
-from tqdm.auto import tqdm
+from tqdm.autonotebook import tqdm
 from transformers import AutoTokenizer
 
 from fish_speech.conversation import (
@@ -364,7 +364,7 @@ def decode_n_tokens(
         device=cur_token.device,
     )
 
-    for i in tqdm(range(num_new_tokens)):
+    for i in tqdm(range(num_new_tokens), leave=False):
         # We need to get windowed repeat penalty
         win_size = 16
         if i < win_size:
@@ -801,9 +801,7 @@ def generate_long(
             torch.cuda.synchronize()
 
         global_encoded = []
-        seg_idx = 0
-
-        while seg_idx < len(encoded):
+        for seg_idx in tqdm(range(len(encoded)), desc="Encoded: "):
             logger.debug(
                 f"Generating sentence {seg_idx + 1}/{len(encoded)} of sample {sample_idx + 1}/{num_samples}"
             )
@@ -878,7 +876,6 @@ def generate_long(
             global_encoded.append(decoded)
             assert (codes >= 0).all(), f"Negative code found: {codes}"
             yield GenerateResponse(action="sample", codes=codes, text=texts[seg_idx])
-            seg_idx += 1
 
         # This indicates the end of the current sample
         yield GenerateResponse(action="next")
