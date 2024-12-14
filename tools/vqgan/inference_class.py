@@ -37,7 +37,7 @@ class VQGanInference:
         audio_time = fake_audios.shape[-1] / \
             self.__model.spec_transform.sample_rate
 
-        self.__logger.info(
+        self.__logger.debug(
             f"Generated audio of shape {fake_audios.shape}, equivalent to {audio_time:.2f} seconds from {indices.shape[1]} features, features/second: {indices.shape[1] / audio_time:.2f}"
         )
 
@@ -45,13 +45,13 @@ class VQGanInference:
         fake_audio = fake_audios[0, 0].float().cpu().numpy()
         sf.write(output_path, fake_audio,
                  self.__model.spec_transform.sample_rate)
-        self.__logger.info(f"Saved audio to {output_path}")
+        self.__logger.debug(f"Saved audio to {output_path}")
 
     @torch.no_grad()
     def generate_from_npy(self, input_path, output_path):
         assert input_path.suffix == ".npy"
 
-        self.__logger.info(f"Processing precomputed indices from {input_path}")
+        self.__logger.debug(f"Processing precomputed indices from {input_path}")
         indices = np.load(input_path)
         indices = torch.from_numpy(indices).to(self.__device).long()
         assert indices.ndim == 2, f"Expected 2D indices, got {indices.ndim}"
@@ -61,7 +61,7 @@ class VQGanInference:
     @torch.no_grad()
     def generate_from_audio(self, input_path, output_path):
         assert input_path.suffix in AUDIO_EXTENSIONS
-        self.__logger.info(f"Processing in-place reconstruction of {input_path}")
+        self.__logger.debug(f"Processing in-place reconstruction of {input_path}")
 
         # Load audio
         audio, sr = torchaudio.load(str(input_path))
@@ -72,7 +72,7 @@ class VQGanInference:
         )
 
         audios = audio[None].to(self.__device)
-        self.__logger.info(
+        self.__logger.debug(
             f"Loaded audio with {audios.shape[2] / self.__model.spec_transform.sample_rate:.2f} seconds"
         )
 
@@ -81,7 +81,7 @@ class VQGanInference:
             [audios.shape[2]], device=self.__device, dtype=torch.long)
         indices = self.__model.encode(audios, audio_lengths)[0][0]
 
-        self.__logger.info(f"Generated indices of shape {indices.shape}")
+        self.__logger.debug(f"Generated indices of shape {indices.shape}")
 
         # Save indices
         np.save(output_path.with_suffix(".npy"), indices.cpu().numpy())
