@@ -76,13 +76,13 @@ def main(
         pipeline_states = PipelineStates(input_hash=input.input_hash)
 
         try:
-            logger.debug(
+            logger.info(
                 f"Start generating from segment index {start_segment_index}")
 
             for segment_index, segment in input.input_segments[start_segment_index:]:
                 is_segment_processed = pipeline_states.is_segment_processed(
                     segment_index)
-                logger.debug(
+                logger.info(
                     f"The segment {segment_index} has{'' if  is_segment_processed else ' not'} been processed")
 
                 generator.generate(

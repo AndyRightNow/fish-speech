@@ -83,6 +83,7 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
                         async_results[finished_index] = True
                         logger.exception(f"Unable to convert to mp3: {e}")
 
+                    logger.info(f"Queue segment {index} for generation.")
                     pool.apply_async(convert, (
                         input_wav_name,
                         output_mp3_name,
@@ -94,7 +95,7 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
                     queued_count += 1
 
                 while len(async_results.keys()) != queued_count:
-                    logger.debug(
+                    logger.info(
                         f"Progress: {len(async_results.keys())}/{queued_count}")
                     time.sleep(1)
 
