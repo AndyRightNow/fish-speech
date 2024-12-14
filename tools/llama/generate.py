@@ -424,7 +424,7 @@ def generate(
     if max_new_tokens:
         if T + max_new_tokens > model.config.max_seq_len:
             max_new_tokens = model.config.max_seq_len - T
-            logger.info(f"Truncating max_new_tokens to {max_new_tokens}")
+            logger.debug(f"Truncating max_new_tokens to {max_new_tokens}")
 
         T_new = T + max_new_tokens
     else:
@@ -534,7 +534,7 @@ def decode_n_tokens_agent(
     total_time = time.time() - start_time
     generated_tokens = i + 1
     tokens_per_second = (generated_tokens / total_time) * batch_size
-    logger.info(
+    logger.debug(
         f"Decoded {generated_tokens} x {batch_size} tokens in {total_time:.2f}s ({tokens_per_second:.2f} tokens/s)"
     )
 
@@ -569,7 +569,7 @@ def generate_agent(
     if max_new_tokens:
         if T + max_new_tokens > model.config.max_seq_len:
             max_new_tokens = model.config.max_seq_len - T
-            logger.info(f"Truncating max_new_tokens to {max_new_tokens}")
+            logger.debug(f"Truncating max_new_tokens to {max_new_tokens}")
 
         T_new = T + max_new_tokens
     else:
@@ -679,21 +679,21 @@ def load_model(checkpoint_path, device, precision, compile=False, is_agent=False
     )
 
     model = model.to(device=device, dtype=precision)
-    logger.info(f"Restored model from checkpoint")
+    logger.debug(f"Restored model from checkpoint")
 
     if isinstance(model, DualARTransformer):
         decode_one_token = (
             decode_one_token_ar_agent if is_agent else decode_one_token_ar
         )
-        logger.info("Using DualARTransformer")
+        logger.debug("Using DualARTransformer")
     else:
         decode_one_token = (
             decode_one_token_naive_agent if is_agent else decode_one_token_naive
         )
-        logger.info("Using NaiveTransformer")
+        logger.debug("Using NaiveTransformer")
 
     if compile:
-        logger.info("Compiling function...")
+        logger.debug("Compiling function...")
         decode_one_token = torch.compile(
             decode_one_token,
             fullgraph=True,
@@ -786,7 +786,7 @@ def generate_long(
                 num_codebooks=model.config.num_codebooks,
             )
         )
-        logger.info(f"Encoded text: {text}")
+        logger.debug(f"Encoded text: {text}")
 
     # Move temperature, top_p, repetition_penalty to device
     # This is important so that changing params doesn't trigger recompile
@@ -804,7 +804,7 @@ def generate_long(
         seg_idx = 0
 
         while seg_idx < len(encoded):
-            logger.info(
+            logger.debug(
                 f"Generating sentence {seg_idx + 1}/{len(encoded)} of sample {sample_idx + 1}/{num_samples}"
             )
 
@@ -855,15 +855,15 @@ def generate_long(
 
             tokens_generated = y.size(1) - prompt_length
             tokens_sec = tokens_generated / t
-            logger.info(
+            logger.debug(
                 f"Generated {tokens_generated} tokens in {t:.02f} seconds, {tokens_sec:.02f} tokens/sec"
             )
-            logger.info(
+            logger.debug(
                 f"Bandwidth achieved: {model_size * tokens_sec / 1e9:.02f} GB/s"
             )
 
             if torch.cuda.is_available():
-                logger.info(
+                logger.debug(
                     f"GPU Memory used: {torch.cuda.max_memory_reserved() / 1e9:.02f} GB"
                 )
 
@@ -1049,7 +1049,7 @@ def main(
             f"Number of prompt text ({len(prompt_text)}) and prompt tokens ({len(prompt_tokens)}) should be the same"
         )
 
-    logger.info("Loading model ...")
+    logger.debug("Loading model ...")
     t0 = time.time()
     model, decode_one_token = load_model(
         checkpoint_path, device, precision, compile=compile
@@ -1063,7 +1063,7 @@ def main(
     if torch.cuda.is_available():
         torch.cuda.synchronize()
 
-    logger.info(f"Time to load model: {time.time() - t0:.02f} seconds")
+    logger.debug(f"Time to load model: {time.time() - t0:.02f} seconds")
 
     if prompt_tokens is not None:
         prompt_tokens = [torch.from_numpy(np.load(p)).to(device) for p in prompt_tokens]
@@ -1098,12 +1098,12 @@ def main(
     for response in generator:
         if response.action == "sample":
             codes.append(response.codes)
-            logger.info(f"Sampled text: {response.text}")
+            logger.debug(f"Sampled text: {response.text}")
         elif response.action == "next":
             if codes:
                 np.save(file_name, torch.cat(codes, dim=1).cpu().numpy())
-                logger.info(f"Saved codes to{file_name}")
-            logger.info(f"Next sample")
+                logger.debug(f"Saved codes to{file_name}")
+            logger.debug(f"Next sample")
             codes = []
             idx += 1
         else:

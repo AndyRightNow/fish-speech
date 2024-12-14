@@ -39,7 +39,7 @@ class LlamaSemanticTokensGenerator:
 
         self.__prompt_text = prompt_text
 
-        logger.info("Loading model ...")
+        logger.debug("Loading model ...")
         t0 = time.time()
         model, decode_one_token = load_model(
             checkpoint_path, device, precision, compile=compile
@@ -54,7 +54,7 @@ class LlamaSemanticTokensGenerator:
         if torch.cuda.is_available():
             torch.cuda.synchronize()
 
-        logger.info(f"Time to load model: {time.time() - t0:.02f} seconds")
+        logger.debug(f"Time to load model: {time.time() - t0:.02f} seconds")
 
         if prompt_tokens is not None:
             prompt_tokens = [torch.from_numpy(np.load(p)).to(
@@ -106,12 +106,12 @@ class LlamaSemanticTokensGenerator:
         for response in generator:
             if response.action == "sample":
                 codes.append(response.codes)
-                self.__logger.info(f"Sampled text: {response.text}")
+                self.__logger.debug(f"Sampled text: {response.text}")
             elif response.action == "next":
                 if codes:
                     np.save(file_name, torch.cat(codes, dim=1).cpu().numpy())
-                    self.__logger.info(f"Saved codes to{file_name}")
-                self.__logger.info(f"Next sample")
+                    self.__logger.debug(f"Saved codes to{file_name}")
+                self.__logger.debug(f"Next sample")
                 codes = []
                 idx += 1
             else:
