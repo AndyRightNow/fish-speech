@@ -801,7 +801,7 @@ def generate_long(
             torch.cuda.synchronize()
 
         global_encoded = []
-        for seg_idx in trange(len(encoded), position=0, desc="Encoded: "):
+        for seg_idx in trange(len(encoded), position=0, desc="Encoded:",):
             logger.debug(
                 f"Generating sentence {seg_idx + 1}/{len(encoded)} of sample {sample_idx + 1}/{num_samples}"
             )
