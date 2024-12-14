@@ -76,7 +76,7 @@ class TTSGenerator:
                     try:
                         self.__sem_tokens_generator.generate(
                             text='\n'.join(([] if not segment_title else [segment_title]) +
-                                        ([line for (_, line) in input_lines])),
+                                           ([line for (_, line) in input_lines])),
                             output_name=output_base_sem_tokens_name,
                             temperature=uniform(0.7, 0.9),
                             top_p=uniform(0.7, 0.8),
@@ -84,15 +84,17 @@ class TTSGenerator:
                         )
                         genearte_success = True
                         generate_exception = None
+                        logger.success(f"{output_npy_name} was generated.")
                     except Exception as e:
-                        logger.exception(f"Failed to generate semantic tokens for {output_npy_name} due to: {e}")
+                        logger.exception(
+                            f"Failed to generate semantic tokens for {output_npy_name} due to: {e}")
                         generate_exception = e
                         generate_count += 1
 
                 if generate_exception:
                     raise generate_exception
             else:
-                logger.success(
+                logger.debug(
                     f"{output_npy_name} already exists. Skipped npy generation.")
         else:
             logger.debug(
@@ -109,8 +111,9 @@ class TTSGenerator:
                     input_path=Path(output_npy_name),
                     output_path=Path(output_wav_name)
                 )
+                logger.success(f"{output_wav_name} was generated.")
             else:
-                logger.success(
+                logger.debug(
                     f"{output_wav_name} already exists. Skipped audio generation.")
         else:
             logger.debug("no_audio=True specified. Skipped audio generation.")
