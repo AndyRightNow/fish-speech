@@ -15,11 +15,8 @@ def trace_output(func=None, stdout=True, stderr=True):
         def write(self, text):
             if text.strip():
                 stack = traceback.extract_stack()
-                # Remove the last few entries which are wrapper frames
-                relevant_stack = stack[:-3]
-                caller_info = traceback.format_list(relevant_stack)[-1].strip()
                 timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-                output = f"[{timestamp}] {caller_info} | {text}"
+                output = f"[{timestamp}] {stack} | {text}"
                 self.original_stream.write(output)
 
         def flush(self):
