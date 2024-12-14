@@ -58,7 +58,7 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
             try:
                 for index, segment in current_processed_segments:
                     if segment in convert_states['converted_segments'] and index not in force_segment_index:
-                        logger.info(f"Segment {finished_index} has already been processed, skipped.")
+                        logger.info(f"Segment {index} has already been processed, skipped.")
                         continue
 
                     output_mp3_name = path.join(
@@ -71,7 +71,7 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
                     )
 
                     if not Path(input_wav_name).exists():
-                        logger.info(f"Segment {finished_index} has no input wav file, skipped.")
+                        logger.info(f"Segment {index} has no input wav file, skipped.")
                         continue
 
                     def callback(result):
