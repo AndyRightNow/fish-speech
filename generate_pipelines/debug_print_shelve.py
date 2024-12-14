@@ -1,17 +1,10 @@
-from pydub import AudioSegment
-from os import mkdir
 import constants
 import click
 from os import path
 import time
-from pathlib import Path
 import shelve
-import json
-import signal
 from input import Input
-from utils import get_intermediate_output_base_name, use_shared_command_options, generate_pipelines_logger as logger
-
-mp3_output_dir = path.join(constants.base_output_dir, "mp3")
+from utils import use_shared_command_options, generate_pipelines_logger as logger
 
 
 @logger.catch
