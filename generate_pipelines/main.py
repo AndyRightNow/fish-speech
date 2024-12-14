@@ -14,6 +14,7 @@ import importlib
 from generator import TTSGenerator
 from utils import use_shared_command_options, generate_pipelines_logger as logger
 import locale
+from trace_utils import trace_output
 
 locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
 
@@ -43,6 +44,7 @@ def __get_segment_title(segment_title_language, segment_index):
 )
 @click.option("--generate-mp3", type=bool, default=False)
 @use_shared_command_options
+@trace_output
 def main(
     no_audio,
     no_semantic_tokens,
