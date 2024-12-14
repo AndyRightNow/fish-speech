@@ -48,12 +48,12 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
         start_segment = next(
             (x for x in processed_segments if x[0] == start_segment_index), processed_segments[0])
 
-        logger.warning(f"start_segment {start_segment}")
+        logger.debug(f"start_segment {start_segment}")
 
         current_processed_segments = processed_segments[processed_segments.index(
             start_segment):]
 
-        logger.warning(
+        logger.debug(
             f"start_segment index {processed_segments.index(start_segment)}")
 
         convert_states['converted_segments'] = [
