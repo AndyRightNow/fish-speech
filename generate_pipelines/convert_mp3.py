@@ -16,7 +16,7 @@ from utils import get_intermediate_output_base_name, use_shared_command_options,
 mp3_output_dir = path.join(constants.base_output_dir, "mp3")
 
 
-def convert(wav_file_path, output_file_path, index, segment, tags):
+def convert(wav_file_path, output_file_path, index, segment):
     try:
         AudioSegment.from_wav(
             wav_file_path
