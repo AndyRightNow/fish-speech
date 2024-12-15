@@ -19,7 +19,7 @@ mp3_output_dir = path.join(constants.base_output_dir, "mp3")
 def convert(wav_file_path, output_file_path, index, segment, tags):
     AudioSegment.from_wav(
         wav_file_path
-    ).export(output_file_path, format="mp3", parameters=["-q:a", "0", "-write_xing", "0"], tags=tags)
+    ).export(output_file_path, format="mp3", parameters=["-q:a", "0", "-write_xing", "0"])
 
     return (index, segment)
 
@@ -28,8 +28,6 @@ def convert(wav_file_path, output_file_path, index, segment, tags):
 def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_count, start_segment_index, pipeline_states=None):
     input = Input(f"{input_name}.txt",
                   max_sem_input_count=max_sem_input_count, prompt_name=prompt_name)
-    input_meta = json.loads(Path(path.join(
-        constants.base_input_dir, 'meta', f"{input_name}.json")).read_text(encoding='utf-8'))
 
     if not pipeline_states:
         pipeline_states = PipelineStates(input.input_hash)
@@ -102,7 +100,6 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
                         output_mp3_name,
                         index,
                         segment,
-                        input_meta['tags']
                     ), callback=callback, error_callback=error_callback)
 
                     queued_count += 1
