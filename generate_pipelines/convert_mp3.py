@@ -22,7 +22,6 @@ def convert(wav_file_path, output_file_path, index, segment, tags):
             wav_file_path
         ).export(output_file_path, format="mp3", parameters=["-q:a", "0", "-write_xing", "0"])
     except Exception as e:
-        e.index = index
         raise e
 
     return (index, segment)
@@ -95,7 +94,6 @@ def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_coun
                             f"Generated segment {finished_index} to mp3 file.")
 
                     def error_callback(e):
-                        async_results[e.index] = True
                         logger.exception(f"Unable to convert to mp3: {e}")
 
                     logger.info(f"Queue segment {index} for generation.")
