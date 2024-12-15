@@ -35,21 +35,12 @@ class ParallelFFmpeg:
             master_task = self._tasklist[0]["task_id"]
             (job_id, job_status) = self._status_q.get_nowait()
             task_name = self._tasklist[job_id]["name"]
-            if job_status == "started":
-                self._tasklist[job_id]["task_id"] = self.progress.add_task(
-                    f"[dark_cyan]|- Processing '[white]{task_name}[/]'.",
-                    total=100
-                )
-            elif job_status == "finished":
-                self.progress.update(self._tasklist[job_id]["task_id"], completed=100, visible=False)
+            if job_status == "finished":
                 self.progress.update(master_task, advance=1)
             elif job_status == "failed":
                 name = self._tasklist[job_id]["name"]
                 self.progress.console.print(f"[red]Error:[/] Failed to process {name}")
-                self.progress.update(self._tasklist[job_id]["task_id"], visible=False)
                 self.progress.update(master_task, advance=1)
-            else:  # No matching text means it is an update on percentage.
-                self.progress.update(self._tasklist[job_id]["task_id"], completed=job_status)
         except queue.Empty:
             pass  # We don't actually care if the finished queue is empty
 
