@@ -114,9 +114,9 @@ def main(input_path, output_path, config_name, checkpoint_path, device):
     )
 
     # Save audio
-    fake_audio = fake_audios[0, 0].float().cpu().numpy()
-    sf.write(output_path, fake_audio, model.spec_transform.sample_rate)
-    logger.info(f"Saved audio to {output_path}")
+    # fake_audio = fake_audios[0, 0].float().cpu().numpy()
+    # sf.write(output_path, fake_audio, model.spec_transform.sample_rate)
+    # logger.info(f"Saved audio to {output_path}")
 
 
 if __name__ == "__main__":
