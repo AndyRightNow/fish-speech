@@ -34,4 +34,7 @@ def clean_text(text):
     # Remove continuous periods (...) and commas (,,,)
     text = re.sub(r"[,]{2,}", lambda m: m.group()[0], text)
 
+    # Remove continuous spaces
+    text = re.sub(r"(\s{1,})", lambda m: m.group()[0], text, flags=re.MULTILINE)
+
     return text
