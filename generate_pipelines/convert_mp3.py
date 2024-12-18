@@ -16,103 +16,50 @@ from utils import get_intermediate_output_base_name, use_shared_command_options,
 mp3_output_dir = path.join(constants.base_output_dir, "mp3")
 
 
-def convert(wav_file_path, output_file_path, index, segment):
+def convert(wav_file_path, output_file_path, tags):
     try:
         AudioSegment.from_wav(
             wav_file_path
-        ).export(output_file_path, format="mp3", parameters=["-q:a", "0", "-write_xing", "0"])
+        ).export(output_file_path, format="mp3", parameters=["-q:a", "0", "-write_xing", "0"], tags=tags)
     except Exception as e:
         raise e
 
-    return (index, segment)
-
 
 @logger.catch
-def convert_mp3(prompt_name, input_name, force_segment_index, max_sem_input_count, start_segment_index, pipeline_states=None):
-    input = Input(f"{input_name}.txt",
-                  max_sem_input_count=max_sem_input_count, prompt_name=prompt_name)
+def convert_mp3_async(input_hash, wav_file_path, segment_index):
+    current_input_mp3_output_dir = path.join(
+        mp3_output_dir, input_hash)
 
-    if not pipeline_states:
-        pipeline_states = PipelineStates(input.input_hash)
+    Path(current_input_mp3_output_dir).mkdir(parents=True, exist_ok=True)
 
-    with shelve.open(path.join(constants.states_dir, f"convert_states_{input.input_hash}")) as convert_states:
-        current_input_mp3_output_dir = path.join(
-            mp3_output_dir, input.input_hash)
+    with Pool(initializer=signal.signal, initargs=(signal.SIGINT, signal.SIG_IGN)) as pool:
+        try:
+            output_mp3_name = path.join(
+                current_input_mp3_output_dir, f"{index + 1}.mp3")
 
-        Path(current_input_mp3_output_dir).mkdir(parents=True, exist_ok=True)
+            if not Path(wav_file_path).exists():
+                logger.info(
+                    f"Segment {index} has no input wav file, skipped.")
+                continue
 
-        processed_segments = pipeline_states.get_processed_segments()
+            def callback(finished_index):
+                logger.success(
+                    f"Generated segment {segment_index} to mp3 file.")
 
-        if not len(processed_segments):
-            return
+            def error_callback(e):
+                logger.exception(f"Unable to convert to mp3: {e}")
 
-        start_segment = next(
-            (x for x in processed_segments if x[0] == start_segment_index), processed_segments[0])
+            logger.info(f"Queue segment {index} for generation.")
+            pool.apply_async(convert, (
+                input_wav_name,
+                output_mp3_name,
+                {
+                    'title': segment_index
+                }
+            ), callback=callback, error_callback=error_callback)
 
-        logger.debug(f"start_segment {start_segment}")
-
-        current_processed_segments = processed_segments[processed_segments.index(
-            start_segment):]
-
-        logger.debug(
-            f"start_segment index {processed_segments.index(start_segment)}")
-
-        convert_states['converted_segments'] = [
-        ] if 'converted_segments' not in convert_states else convert_states['converted_segments']
-
-        with Pool(initializer=signal.signal, initargs=(signal.SIGINT, signal.SIG_IGN)) as pool:
-            async_results = {}
-            queued_count = 0
-
-            try:
-                for index, segment in current_processed_segments:
-                    if segment in convert_states['converted_segments'] and index not in force_segment_index:
-                        logger.info(
-                            f"Segment {index} has already been processed, skipped.")
-                        continue
-
-                    output_mp3_name = path.join(
-                        current_input_mp3_output_dir, f"{index + 1}.mp3")
-
-                    input_wav_name = path.join(
-                        constants.audio_output_dir,
-                        input.input_hash,
-                        f"{get_intermediate_output_base_name(segment[0], segment[1])}.wav"
-                    )
-
-                    if not Path(input_wav_name).exists():
-                        logger.info(
-                            f"Segment {index} has no input wav file, skipped.")
-                        continue
-
-                    def callback(result):
-                        (finished_index, finished_segment) = result
-                        async_results[finished_index] = True
-
-                        convert_states['converted_segments'] += [finished_segment]
-                        logger.success(
-                            f"Generated segment {finished_index} to mp3 file.")
-
-                    def error_callback(e):
-                        logger.exception(f"Unable to convert to mp3: {e}")
-
-                    logger.info(f"Queue segment {index} for generation.")
-                    pool.apply_async(convert, (
-                        input_wav_name,
-                        output_mp3_name,
-                        index,
-                        segment,
-                    ), callback=callback, error_callback=error_callback)
-
-                    queued_count += 1
-
-                while len(async_results.keys()) != queued_count:
-                    logger.info(
-                        f"Progress: {len(async_results.keys())}/{queued_count}")
-                    time.sleep(1)
-
-            except KeyboardInterrupt:
-                pool.close()
+        except KeyboardInterrupt:
+            pool.close()
 
 
 @click.command()

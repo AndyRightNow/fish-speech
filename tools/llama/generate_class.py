@@ -73,14 +73,15 @@ class LlamaSemanticTokensGenerator:
     def generate(
         self,
         text: str,
-        output_name: str,
         num_samples: int = 1,
         max_new_tokens: int = 0,
         top_p: float = 0.7,
         repetition_penalty: float = 1.2,
         temperature: float = 0.7,
         iterative_prompt: bool = True,
-        chunk_length: int = 100
+        chunk_length: int = 100,
+        save_as_file=False,
+        output_name: str = None,
     ):
         generator = generate_long(
             model=self.__model,
@@ -101,16 +102,23 @@ class LlamaSemanticTokensGenerator:
         idx = 0
         codes = []
 
-        file_name = f"{output_name}_{idx}.npy"
-
         for response in generator:
             if response.action == "sample":
                 codes.append(response.codes)
                 self.__logger.debug(f"Sampled text: {response.text}")
             elif response.action == "next":
                 if codes:
-                    np.save(file_name, torch.cat(codes, dim=1).cpu().numpy())
-                    self.__logger.debug(f"Saved codes to{file_name}")
+                    indices = torch.cat(codes, dim=1).cpu().numpy()
+
+                    if save_as_file and output_name:
+                        file_name = f"{output_name}_{idx}.npy"
+
+                        np.save(file_name, indices)
+
+                        self.__logger.debug(f"Saved codes to{file_name}")
+                    else:
+                        yield indices
+
                 self.__logger.debug(f"Next sample")
                 codes = []
                 idx += 1

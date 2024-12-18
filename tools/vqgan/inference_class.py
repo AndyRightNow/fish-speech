@@ -15,7 +15,7 @@ class VQGanInference:
     __model: Any = None
     __device = ''
     __logger = loguru.logger
-    
+
     def __init__(
         self,
         config_name="firefly_gan_vq",
@@ -48,11 +48,18 @@ class VQGanInference:
         self.__logger.debug(f"Saved audio to {output_path}")
 
     @torch.no_grad()
-    def generate_from_npy(self, input_path, output_path):
-        assert input_path.suffix == ".npy"
+    def generate_from_npy(self, output_path, input_indices=None, input_path=None):
+        indices = input_indices
 
-        self.__logger.debug(f"Processing precomputed indices from {input_path}")
-        indices = np.load(input_path)
+        if input_path is not None:
+            assert input_path.suffix == ".npy"
+
+            self.__logger.debug(
+                f"Processing precomputed indices from {input_path}")
+            indices = np.load(input_path)
+
+        assert indices is not None
+
         indices = torch.from_numpy(indices).to(self.__device).long()
         assert indices.ndim == 2, f"Expected 2D indices, got {indices.ndim}"
 
@@ -61,7 +68,8 @@ class VQGanInference:
     @torch.no_grad()
     def generate_from_audio(self, input_path, output_path):
         assert input_path.suffix in AUDIO_EXTENSIONS
-        self.__logger.debug(f"Processing in-place reconstruction of {input_path}")
+        self.__logger.debug(
+            f"Processing in-place reconstruction of {input_path}")
 
         # Load audio
         audio, sr = torchaudio.load(str(input_path))

@@ -2,7 +2,7 @@ from input import Input
 import warnings
 from traceback import print_exception
 from os import path
-from convert_mp3 import convert_mp3
+from convert_mp3_async import convert_mp3_async
 import constants
 import os
 import sys
@@ -23,11 +23,11 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 def __get_segment_title(segment_title_language, segment_index):
     if segment_title_language == "cn":
-        return f"第{segment_index + 1}段， ， ，"
+        return f"第{segment_index + 1}段!,!,!,"
     if segment_title_language == "en":
-        return f"Segment {segment_index + 1}, , ,"
+        return f"Segment {segment_index + 1}!,!,!,"
     if segment_title_language == "ja":
-        return f"第{segment_index + 1}部分， ， ，"
+        return f"第{segment_index + 1}部分!,!,!,"
 
     return ""
 
@@ -41,7 +41,6 @@ def __get_segment_title(segment_title_language, segment_index):
     type=click.types.Choice(["en", "cn", "ja"]),
     default="cn",
 )
-@click.option("--generate-mp3", type=bool, default=False)
 @use_shared_command_options
 def main(
     no_audio,
@@ -53,7 +52,6 @@ def main(
     start_segment_index,
     insert_segment_title,
     segment_title_language,
-    generate_mp3,
 ):
     pipeline_states = None
     try:
@@ -85,7 +83,7 @@ def main(
                 logger.info(
                     f"The segment {segment_index} has{'' if  is_segment_processed else ' not'} been processed")
 
-                generator.generate(
+                output_wav_name = generator.generate(
                     input_hash=input.input_hash,
                     input_lines=segment,
                     no_semantic_tokens=is_segment_processed,
@@ -98,18 +96,16 @@ def main(
                     ),
                 )
 
-                pipeline_states.save_processed_segment(segment, segment_index)
+                if output_wav_name is not None:
+                    pipeline_states.save_processed_segment(
+                        segment, segment_index)
 
-                pipeline_states.save()
+                    pipeline_states.save()
 
-                if generate_mp3:
-                    convert_mp3(
-                        force_segment_index=force_segment_index,
-                        input_name=input_name,
-                        max_sem_input_count=max_sem_input_count,
-                        prompt_name=prompt_name,
-                        start_segment_index=start_segment_index,
-                        pipeline_states=pipeline_states
+                    convert_mp3_async(
+                        input_hash=input.input_hash,
+                        wav_file_path=output_wav_name,
+                        segment_index=segment_index
                     )
 
         except Exception as e:
