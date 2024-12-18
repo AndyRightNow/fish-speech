@@ -2,7 +2,7 @@ from input import Input
 import warnings
 from traceback import print_exception
 from os import path
-from convert_mp3_async import convert_mp3_async
+from convert_mp3 import convert_mp3_async
 import constants
 import os
 import sys
