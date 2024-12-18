@@ -33,8 +33,6 @@ def __get_segment_title(segment_title_language, segment_index):
 
 
 @click.command()
-@click.option("--no-audio", type=bool, default=False)
-@click.option("--no-semantic-tokens", type=bool, default=False)
 @click.option("--insert-segment-title", type=bool, default=False)
 @click.option(
     "--segment-title-language",
@@ -43,8 +41,6 @@ def __get_segment_title(segment_title_language, segment_index):
 )
 @use_shared_command_options
 def main(
-    no_audio,
-    no_semantic_tokens,
     prompt_name,
     input_name,
     force_segment_index,
@@ -63,8 +59,6 @@ def main(
             ],
             prompt_tokens=[
                 Path(path.join(constants.base_dir, f"{prompt_name}.npy"))],
-            no_audio=no_audio,
-            no_semantic_tokens=no_semantic_tokens,
         )
         input = Input(
             f"{input_name}.txt",
@@ -86,7 +80,6 @@ def main(
                 output_wav_name = generator.generate(
                     input_hash=input.input_hash,
                     input_lines=segment,
-                    no_semantic_tokens=is_segment_processed,
                     no_audio=is_segment_processed,
                     force=segment_index in force_segment_index,
                     segment_title=(
