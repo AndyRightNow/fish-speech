@@ -40,7 +40,7 @@ def convert_mp3_async(input_hash, wav_file_path, segment_index):
             if not Path(wav_file_path).exists():
                 logger.info(
                     f"Segment {index} has no input wav file, skipped.")
-                continue
+                return
 
             def callback(finished_index):
                 logger.success(
