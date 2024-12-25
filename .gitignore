@@ -36,3 +36,4 @@ generate_pipelines/input/*.txt
 generate_pipelines/logs
 
 __archived
+*log
