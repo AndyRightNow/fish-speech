@@ -1,5 +1,5 @@
 [project]
-name = "fish-speech"
+name = "fish_speech"
 version = "0.1.0"
 authors = [
     {name = "Lengyue", email = "lengyue@lengyue.me"},
