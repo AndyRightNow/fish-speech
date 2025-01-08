@@ -364,7 +364,7 @@ def decode_n_tokens(
         device=cur_token.device,
     )
 
-    decode_range = trange(num_new_tokens, position=0, leave=False)
+    decode_range = trange(num_new_tokens, position=0, leave=False, desc="Decode N Tokens")
 
     for i in decode_range:
         # We need to get windowed repeat penalty
