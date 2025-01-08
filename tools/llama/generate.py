@@ -400,7 +400,8 @@ def decode_n_tokens(
             break
 
     decode_range.close()
-    
+    decode_range.clear()
+
     return previous_tokens[:, : i + 1]
 
 
