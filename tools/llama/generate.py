@@ -364,7 +364,9 @@ def decode_n_tokens(
         device=cur_token.device,
     )
 
-    for i in trange(num_new_tokens, position=0, leave=False):
+    decode_range = trange(num_new_tokens, position=0, leave=False)
+
+    for i in decode_range:
         # We need to get windowed repeat penalty
         win_size = 16
         if i < win_size:
@@ -397,6 +399,8 @@ def decode_n_tokens(
         if cur_token[0, 0, -1] == model.tokenizer.get_token_id(IM_END_TOKEN):
             break
 
+    decode_range.close()
+    
     return previous_tokens[:, : i + 1]
 
 
