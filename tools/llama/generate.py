@@ -399,6 +399,7 @@ def decode_n_tokens(
         if cur_token[0, 0, -1] == model.tokenizer.get_token_id(IM_END_TOKEN):
             break
 
+    print('decode_range close')
     decode_range.close()
     decode_range.clear()
 
