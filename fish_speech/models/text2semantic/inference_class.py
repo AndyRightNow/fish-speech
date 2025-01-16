@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import torch._dynamo.config
 import torch._inductor.config
-from .generate import generate_long, load_model
+from .inference import generate_long, load_model
 import loguru
 
 

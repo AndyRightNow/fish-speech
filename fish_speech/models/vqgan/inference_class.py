@@ -8,7 +8,8 @@ import loguru
 
 from .inference import load_model
 
-from tools.file import AUDIO_EXTENSIONS
+from fish_speech.utils.file import AUDIO_EXTENSIONS
+
 
 
 class VQGanInference:
