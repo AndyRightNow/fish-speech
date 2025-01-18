@@ -6,7 +6,7 @@ import torchaudio
 from typing import Any
 import loguru
 
-from .inference import load_model
+from fish_speech.models.vqgan.inference import load_model
 
 from fish_speech.utils.file import AUDIO_EXTENSIONS
 
